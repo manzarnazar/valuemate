@@ -1,0 +1,2 @@
+/Users/manzar/Desktop/valuemate/android/app/.cxx/Debug/572u4k29/x86_64/CMakeFiles/edit_cache.dir
+/Users/manzar/Desktop/valuemate/android/app/.cxx/Debug/572u4k29/x86_64/CMakeFiles/rebuild_cache.dir
