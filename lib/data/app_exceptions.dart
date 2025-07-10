@@ -22,13 +22,18 @@ class InternetException extends AppExceptions {
 
 class RequestTimeOut extends AppExceptions {
 
-  RequestTimeOut([String? message]) : super(message, 'Request Time out') ;
+  RequestTimeOut([String? message]) : super(message, 'Request Time Out') ;
 
 }
 
 class ServerException extends AppExceptions {
 
   ServerException([String? message]) : super(message, 'Internal server error') ;
+
+}
+class SocketException extends AppExceptions {
+
+  SocketException([String? message]) : super(message, 'No internet connection') ;
 
 }
 

@@ -263,32 +263,40 @@ Future<void> _loadToken() async {
 }
 
   Widget _buildDangerZoneSection() {
-    return Card(
-      margin: EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: context.cardColor,
-
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-         
-
-          
-          Center(
-            child: TextButton(
-              child: Text('Logout', style: TextStyle(color: context.primaryColor, fontWeight: FontWeight.bold, )),
+  return Card(
+    margin: EdgeInsets.all(16),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    color: context.cardColor,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+       Center(
+  child: Obx(() {
+    return Container(
+      height: 48, // Fixed height for both button and loader
+      child: authController.loading
+          ? const Center(child: CircularProgressIndicator())
+          : TextButton(
               onPressed: () {
                 authController.logout();
-                
-                // Handle logout
               },
+              child: Text(
+                'Logout',
+                style: TextStyle(
+                  color: context.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
-
-        ],
-      ),
     );
-  }
+  }),
+),
+
+      ],
+    ),
+  );
+}
+
 
   Widget _buildSignInButton() {
     return Card(

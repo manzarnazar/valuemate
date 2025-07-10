@@ -16,25 +16,25 @@ class _SplashScreenState extends State<SplashScreen> {
   SplashServices _splashServices = SplashServices();
   final ConstantsController _constantsController = Get.put(ConstantsController());
 
-  @override
-  void initState() {
-    super.initState();
-    _initializeApp();
-  }
+ @override
+void initState() {
+  super.initState();
+  _initializeApp(); // ✅ handle everything here
+}
 
-  Future<void> _initializeApp() async {
-    // Wait for both the splash check and constants loading
-    await Future.wait([
-      _splashServices.checkFirstTime(),
-      _constantsController.fetchConstants(),
-    ]);
+Future<void> _initializeApp() async {
+  // ✅ Wait for constants to load
+  // await _constantsController.fetchConstants();
 
-    // Print all the constants values
-    _printConstantsValues();
+  // ✅ Wait for splash tasks (like checking onboarding or login)
+  await _splashServices.checkFirstTime();
 
-    final routeName = await _splashServices.checkFirstTime();
-    Get.offAllNamed(routeName);
-  }
+  _printConstantsValues();
+
+  final routeName = await _splashServices.checkFirstTime();
+  Get.offAllNamed(routeName);
+}
+
 
   void _printConstantsValues() {
     debugPrint('===== Constants Values =====');
@@ -64,11 +64,11 @@ class _SplashScreenState extends State<SplashScreen> {
     //   debugPrint('  ${location.id}: ${location.name}');
     // }
     
-    // // Print property types
-    // debugPrint('\nProperty Types:');
-    // for (var type in _constantsController.propertyTypes) {
-    //   debugPrint('  ${type.id}: ${type.name}');
-    // }
+    // Print property types
+    debugPrint('\nProperty Types:');
+    for (var type in _constantsController.propertyTypes) {
+      debugPrint('  ${type.id}: ${type.name}');
+    }
     
     // // Print request types
     // debugPrint('\nRequest Types:');
@@ -89,18 +89,8 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF560574),
-      body: Obx(() {
-        if (_constantsController.isLoading.value) {
-          return Center(child: CircularProgressIndicator());
-        }
-        
-        if (_constantsController.error.isNotEmpty) {
-          debugPrint('Error loading constants: ${_constantsController.error}');
-          // Continue with splash screen even if constants failed to load
-        }
-        
-        return Center(child: Image.asset("assets/images/splash_screen.jpeg"));
-      }),
+      body: Center(child: Image.asset("assets/images/splash_screen.jpeg"))
+
     );
   }
 }

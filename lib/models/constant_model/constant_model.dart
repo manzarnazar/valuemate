@@ -21,12 +21,13 @@ class Data {
   final List<Company> companies;
   final List<Location> locations;
   final List<PropertyType> propertyTypes;
-  final List<PropertyServiceType> propertyServiceTypes; // Changed from List<dynamic>
+  final List<PropertyServiceType> propertyServiceTypes;
   final List<RequestType> requestTypes;
   final List<ServicePricing> servicePricings;
   final List<DocumentRequirement> documentRequirements;
   final List<Status> statuses;
   final List<Setting> settings;
+  final List<Banner> banners; // ✅ NEW
 
   Data({
     required this.paymentMethods,
@@ -40,6 +41,7 @@ class Data {
     required this.documentRequirements,
     required this.statuses,
     required this.settings,
+    required this.banners, // ✅ NEW
   });
 
   factory Data.fromJson(Map<String, dynamic> json) {
@@ -88,10 +90,13 @@ class Data {
               ?.map((e) => Setting.fromJson(e))
               .toList() ??
           [],
+      banners: (json['banners'] as List<dynamic>?) // ✅ NEW
+              ?.map((e) => Banner.fromJson(e))
+              .toList() ??
+          [],
     );
   }
 }
-
 
 
 
@@ -240,20 +245,65 @@ class Location {
 class PropertyType {
   final int id;
   final String name;
+  final String image_url;
+  
+
 
   PropertyType({
     required this.id,
     required this.name,
+    required this.image_url,
   });
 
   factory PropertyType.fromJson(Map<String, dynamic> json) {
     return PropertyType(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
+      image_url: json['image_url'] ?? '',
     );
   }
 }
 
+class Banner {
+  final int id;
+  final String title;
+  final String description;
+  final String imageUrl;
+  final String link;
+  final String adType;
+  final String startDate;
+  final String endDate;
+  final String createdAtDate;
+  final String createdAtTime;
+
+  Banner({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.imageUrl,
+    required this.link,
+    required this.adType,
+    required this.startDate,
+    required this.endDate,
+    required this.createdAtDate,
+    required this.createdAtTime,
+  });
+
+  factory Banner.fromJson(Map<String, dynamic> json) {
+    return Banner(
+      id: json['id'] ?? 0,
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      imageUrl: json['image_url'] ?? '',
+      link: json['link'] ?? '',
+      adType: json['ad_type'] ?? '',
+      startDate: json['start_date'] ?? '',
+      endDate: json['end_date'] ?? '',
+      createdAtDate: json['created_at_date'] ?? '',
+      createdAtTime: json['created_at_time'] ?? '',
+    );
+  }
+}
 
 class RequestType {
   final int id;

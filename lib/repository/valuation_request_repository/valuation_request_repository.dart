@@ -17,9 +17,11 @@ class ValuationRepository {
       
 
       return response;
-    } catch (e, stackTrace) {
-      print('Error in createValuationRequest: $e');
-      print('Stack trace: $stackTrace');
+
+      
+    } catch (e) {
+      // print('Error is $e');
+      // print('Stack trace: $stackTrace');
       return e;
     }
   }

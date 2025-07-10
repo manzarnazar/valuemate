@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:valuemate/data/app_exceptions.dart';
 import 'package:valuemate/data/network/network_api_services.dart';
 import 'package:http/http.dart' as http;
 
@@ -34,9 +36,22 @@ class DocumentUploadRepository {
       ));
     }
 
-    var streamedResponse = await request.send();
-    var response = await http.Response.fromStream(streamedResponse);
-
-    return _apiService.returnResponse(response);
+   try {
+  final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
+  final response = await http.Response.fromStream(streamedResponse);
+  return _apiService.returnResponse(response);
+} on SocketException {
+  throw InternetException('No internet connection');
+} on TimeoutException {
+  throw RequestTimeOut('Request timed out');
+} on http.ClientException catch (e) {
+  if (e != null || e.message.contains('SocketException')) {
+    throw InternetException('');
+  }
+  throw FetchDataException('Client error: ${e.message}');
+} catch (e) {
+  print('Unhandled error in uploadDocuments: $e');
+  rethrow;
+}
   }
 }

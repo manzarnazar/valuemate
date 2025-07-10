@@ -11,7 +11,7 @@ class SplashServices {
 
 Future<String> checkFirstTime() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  await Future.delayed(const Duration(seconds: 3));
+  await Future.delayed(const Duration(seconds: 2));
 
   print("test ${prefs.getBool('is_first_time')}");
 

@@ -4,11 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:valuemate/data/network/network_api_services.dart';
-import 'package:valuemate/models/auth_model/auth_response.model.dart';
 import 'package:valuemate/models/constant_model/constant_model.dart';
 import 'package:valuemate/models/valuation_request_model/valuation_request_model.dart';
-import 'package:valuemate/res/colors/app_color.dart';
 import 'package:valuemate/utlis/themeutlis.dart';
 import 'package:valuemate/view/dashboard/components/citySelection.dart';
 import 'package:valuemate/view/dashboard/components/service_component.dart';
@@ -60,18 +57,21 @@ class _PropertyFormState extends State<PropertyForm> {
   Company? selectedCompany;
   String? token;
 
-  @override
-  void initState() {
-    super.initState();
+bool _isTokenLoaded = false;
 
-    final company = widget.selectedCompany;
-    if (company != null) {
-      selectedCompany = company;
-    }
+@override
+void initState() {
+  super.initState();
 
-    _requestController.resetIdValue(); 
-    _loadToken();
+  final company = widget.selectedCompany;
+  if (company != null) {
+    selectedCompany = company;
   }
+
+  _requestController.resetIdValue(); 
+  _loadToken();
+}
+
 
 List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
   if (propertyTypeId == null) return [];
@@ -91,20 +91,25 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
 }
 
   Future<void> _loadToken() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? tok = prefs.getString('token');
-      // print("Token from SharedPreferences: $tok");
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final String? tok = prefs.getString('token');
 
-      if (mounted) { 
-        setState(() {
-          token = tok;
-        });
-      }
-    } catch (e) {
-      print("Error loading token: $e");
+    if (mounted) {
+      setState(() {
+        token = tok;
+        _isTokenLoaded = true;
+      });
+    }
+  } catch (e) {
+    print("Error loading token: $e");
+    if (mounted) {
+      setState(() {
+        _isTokenLoaded = true; // Still stop the loading screen
+      });
     }
   }
+}
 
   bool get showDocumentStep {
     try {
@@ -162,38 +167,42 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
 }
 
   void goToNextStep() async {
+  // Step 1: Validate property type
   if (currentStep == 1 && selectedProperty.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Please select a property type')),
     );
     return;
   }
+
+  // Step 2: Validate location and area
   if (currentStep == 2 && (selectedCityName.isEmpty || area.isEmpty)) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Please fill all location details')),
     );
     return;
+
+    
   }
-  
-  // Handle company selection step
-  if (currentStep == 3 && !widget.preSelected) {
+
+  bool isRequestStep = (widget.preSelected && currentStep == 2) ||
+                        (!widget.preSelected && currentStep == 3);
+
+  // Step 3 (only when preSelected is false): Select Company
+  if (isRequestStep) {
     if (selectedCompany == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Please select a company')),
       );
       return;
     }
-    
-    // Show confirmation dialog
+
     final shouldProceed = await _showCompanyConfirmationDialog();
-    if (shouldProceed == null) {
-      return; // Dialog was dismissed
-    }
+    if (shouldProceed == null) return;
     if (!shouldProceed) {
-      _showCompanyBottomSheet(); // Show company selection again
+      _showCompanyBottomSheet();
       return;
     }
-
 
     final user = await UserPreference().getUser();
     final requestData = ValuationRequest(
@@ -207,63 +216,47 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
       area: int.tryParse(area) ?? 0,
       reference: '123abc',
     );
-    
-    // Print all values before API call
-// print('valuation_request_id: ${_requestController.request_id.value}');
-// print('companyId: ${selectedCompany!.id}');
-// print('userId: ${user!.id}');
-// print('propertyTypeId: $selectedPropertyId');
-// print('serviceTypeId: ${selectedServiceType?.serviceTypeId}');
-// print('requestTypeId: 1');
-// print('locationId: ${selectedCityKey?.toInt() ?? 0}');
-// print('areaFrom: ${selectedServicePricing}');
-// print('areaTo: ${selectedServicePricing}');
-// print('area: ${int.tryParse(area) ?? 0}');
-// print('reference: 123abc');
-
 
     await _requestController.createValuationRequest(requestData, token!);
 
-    print(_requestController.price.value);
-
- 
-  
-    if (_requestController.isLoading.value) {
+    if (_requestController.isLoading.value) return;
+    if (_requestController.errorMessage.value.isNotEmpty){
       return;
     }
-    
-    // Check if request was successful before proceeding
-    // if (_requestController.request_id.value == 0) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text('Valueation Request Created.')),
-    //   );
-    //   return;
-    // }
   }
 
-  // Rest of your existing code...
-  if(showDocumentStep && currentStep == 4) {
-  final requiredDocs = getRequiredDocuments();
-  final documentRequirementIds = getDocumentRequirementIds();
-  
-  if (propertyDocuments.length != requiredDocs.length) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Please upload all required documents')),
+
+  bool isDocumentStep = (widget.preSelected && currentStep == 3) ||
+                        (!widget.preSelected && currentStep == 4);
+
+  if (isDocumentStep && showDocumentStep) {
+    final requiredDocs = getRequiredDocuments();
+    final documentRequirementIds = getDocumentRequirementIds();
+
+    if (propertyDocuments.length != requiredDocs.length) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please upload all required documents')),
+      );
+      return;
+    }
+
+    List<File> docFiles = propertyDocuments.map((xfile) => File(xfile.path)).toList();
+
+    await _documentController.uploadDocuments(
+      valuationRequestId: _requestController.request_id.value,
+      documentRequirementIds: documentRequirementIds,
+      documentFiles: docFiles,
+      token: token!,
     );
-    return;
+
+    if (_documentController.isLoading.value) return;
+    if (_documentController.errorMessage.value.isNotEmpty){
+
+      return;
+    }
   }
-  
-  List<File> docFiles = propertyDocuments.map((xfile) => File(xfile.path)).toList();
-  
-  await _documentController.uploadDocuments(
-    valuationRequestId: _requestController.request_id.value,
-    documentRequirementIds: documentRequirementIds,
-    documentFiles: docFiles,
-    token: token!,
-  );
-}
 
-
+  // Go to next step if all validations passed
   if (!_requestController.isLoading.value && currentStep < totalSteps) {
     setState(() {
       currentStep++;
@@ -274,6 +267,8 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
     });
   }
 }
+
+
   void goToPreviousStep() {
     if (currentStep > 1) {
       setState(() {
@@ -499,6 +494,7 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
                               token: token!,
                             );
 
+
                             print(paymentResponse);
 
                             if (paymentResponse['status'] == true &&
@@ -521,6 +517,7 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Error: ${e.toString()}')),
                             );
+
                           } finally {
                             _requestController.isLoading.value = false;
                           }
@@ -550,47 +547,55 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
 
 
   Widget buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          currentStep == 1
-              ? "Choose Property Type"
-              : currentStep == 2
-                  ? "Location and Area"
-                  : currentStep == 3
-                      ? widget.preSelected
-                          ? "Review Summary"
-                          : "Select Company"
-                      : currentStep == 4
-                          ? showDocumentStep
-                            ? "Upload Documents"
-                            : "Review Summary"
-                          : "Review Summary",
-          style:
-              boldTextStyle(size: 22, color: Theme.of(context).iconTheme.color),
-        ),
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              height: 40,
-              width: 40,
-              child: CircularProgressIndicator(
-                value: currentStep / totalSteps,
-                strokeWidth: 4,
-                backgroundColor: context.dividerColor,
-                valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
-              ),
-            ),
-            Text("$currentStep of $totalSteps",
-                style: secondaryTextStyle(
-                    size: 10, color: Theme.of(context).iconTheme.color)),
-          ],
-        )
-      ],
-    );
+  String getStepTitle() {
+    if (currentStep == 1) {
+      return "Choose Property Type";
+    } else if (currentStep == 2) {
+      return "Location and Area";
+    } else if (currentStep == 3) {
+      return widget.preSelected ? "Upload Documents" : "Select Company";
+    } else if (currentStep == 4) {
+      return widget.preSelected ? "Review Summary" : "Upload Documents";
+    } else if (currentStep == 5) {
+      return "Review Summary";
+    } else {
+      return "";
+    }
   }
+
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        getStepTitle(),
+        style: boldTextStyle(size: 22, color: Theme.of(context).iconTheme.color),
+      ),
+      Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            height: 40,
+            width: 40,
+            child: CircularProgressIndicator(
+              value: currentStep / totalSteps,
+              strokeWidth: 4,
+              backgroundColor: context.dividerColor,
+              valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
+            ),
+          ),
+          Text(
+            "$currentStep of $totalSteps",
+            style: secondaryTextStyle(
+              size: 10,
+              color: Theme.of(context).iconTheme.color,
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
 
   Widget buildPropertyOption(String title, int id, IconData icon, Color color) {
     bool isSelected = selectedProperty == title;
@@ -630,40 +635,42 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
   }
 
   Widget buildStepOne() {
-    return Obx(() {
-      if (_constantsController.propertyTypes.isEmpty) {
-        return Center(child: CircularProgressIndicator());
-      }
+  return Obx(() {
+    final propertyTypes = _constantsController.propertyTypes;
+    debugPrint("buildStepOne() -> ${propertyTypes.length} property types");
 
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "What type of property valuation are you looking for?",
-              style: primaryTextStyle(
-                size: 16,
-                weight: FontWeight.w600,
-                color: Theme.of(context).iconTheme.color,
-              ),
+    if (propertyTypes.isEmpty) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "What type of property valuation are you looking for?",
+            style: primaryTextStyle(
+              size: 16,
+              weight: FontWeight.w600,
+              color: Theme.of(context).iconTheme.color,
             ),
-            SizedBox(height: 16),
-            ..._constantsController.propertyTypes.map((propertyType) {
-              final (icon, color) =
-                  PropertyTypeUtils.getIconAndColor(propertyType.name);
-              return buildPropertyOption(
-                propertyType.name,
-                propertyType.id,
-                icon,
-                color,
-              );
-            }).toList(),
-            SizedBox(height: 10),
-          ],
-        ),
-      );
-    });
-  }
+          ),
+          SizedBox(height: 16),
+          ...propertyTypes.map((propertyType) {
+            final (icon, color) = PropertyTypeUtils.getIconAndColor(propertyType.name);
+            return buildPropertyOption(
+              propertyType.name,
+              propertyType.id,
+              icon,
+              color,
+            );
+          }).toList(),
+          SizedBox(height: 10),
+        ],
+      ),
+    );
+  });
+}
 
   Widget buildStepTwo() {
   return Column(
@@ -978,9 +985,9 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
             _buildInfoCard(
               children: [
                 _buildInfoRow(
-                    "Documents Uploaded:", "${propertyDocuments.length}"),
-                const SizedBox(height: 12),
-                _buildInfoRow("Images Uploaded:", "${propertyImages.length}"),
+                    "Documents:", "${propertyDocuments.length}"),
+                // const SizedBox(height: 12),
+
               ],
             ),
           ],
@@ -1001,10 +1008,7 @@ List<ServiceType> getServicesForPropertyType(int? propertyTypeId) {
                       ),
                     ),
                     Text(
-                      selectedCompany != null && selectedPropertyId != null
-                          ? _getPriceForCompany(
-                              selectedCompany!.id, area.toDouble())
-                          : "N/A",
+                      "${_requestController.price.value} OMR",
                       style: boldTextStyle(
                         size: 22,
                         color: context.primaryColor,
@@ -1126,11 +1130,58 @@ String _getPriceForCompany(int companyId, double area) {
     );
   }
 
-  
-  @override
-  Widget build(BuildContext context) {
-// print(selectedRequestType!.id);
-    // getServicesForPropertyType(selectedProperty.toInt());
+
+@override
+Widget build(BuildContext context) {
+  // If no token, show login button
+   if (!_isTokenLoaded) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+
+  if (token == null || token!.isEmpty) {
+    return Scaffold(
+      backgroundColor: context.scaffoldBackgroundColor,
+      body: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Welcome Back!",
+                            style: TextStyle(
+                                fontSize: 24, fontWeight: FontWeight.bold)),
+                        16.height,
+                        Text("Login to your account to continue",
+                            style: TextStyle(fontSize: 14, color: Colors.grey)),
+                        // Add the dummy data button here
+                        16.height,
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 40),
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  child: Text("Login"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).primaryColor,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+    );
+  }
     return Scaffold(
       backgroundColor: context.scaffoldBackgroundColor,
       body: SafeArea(
@@ -1149,7 +1200,7 @@ String _getPriceForCompany(int companyId, double area) {
                     buildStepTwo(),
                     buildStepThree(),
                     if(widget.preSelected) buildStepFive() else if (showDocumentStep) buildStepFour(),
-                    // buildStepFive(),
+                    if(!widget.preSelected) buildStepFive(),
                   ].where((child) => child != null).toList(),
                 ),
               ),
@@ -1173,31 +1224,45 @@ String _getPriceForCompany(int companyId, double area) {
                       ),
                     ),
                   if (currentStep > 1) SizedBox(width: 16),
-                  Obx(
-                    () =>  
-                    _requestController.isLoading.value ? CircularProgressIndicator() : Expanded(
-  child: ElevatedButton(
-    onPressed: _requestController.isLoading.value 
-      ? null 
-      : (currentStep == totalSteps 
-          ? _showPaymentMethodBottomSheet 
-          : goToNextStep),
-    style: ElevatedButton.styleFrom(
-      padding: EdgeInsets.symmetric(vertical: 16),
-      backgroundColor: _requestController.isLoading.value 
-        ? Colors.grey 
-        : context.primaryColor,
-      shape: RoundedRectangleBorder(
-          borderRadius: radius(defaultRadius)),
+Obx(() {
+  final isRequestLoading = _requestController.isLoading.value;
+  final isDocLoading = _documentController.isLoading.value;
+  final isLoading = isRequestLoading || isDocLoading;
+  final isLastStep = currentStep == totalSteps;
+
+  return Expanded(
+    child: ElevatedButton(
+      onPressed: isLoading
+          ? null
+          : isLastStep
+              ? _showPaymentMethodBottomSheet
+              : goToNextStep,
+      style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.symmetric(vertical: 16),
+        backgroundColor: isLoading
+            ? Colors.grey
+            : context.primaryColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius(defaultRadius),
+        ),
+      ),
+      child: isLoading
+          ? SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          : Text(
+              isLastStep ? "Pay Now" : "NEXT",
+              style: boldTextStyle(size: 16, color: Colors.white),
+            ),
     ),
-    child:
-       Text(
-          currentStep == totalSteps ? "Pay Now" : "NEXT",
-          style: boldTextStyle(size: 16, color: Colors.white)),
-  ),
-),
-                  ),
-                ],
+  );
+}),
+       ],
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:nb_utils/nb_utils.dart';
 import 'package:valuemate/models/constant_model/constant_model.dart';
 import 'package:valuemate/repository/constant_repository/constant_repository.dart';
 
@@ -9,16 +10,20 @@ class ConstantsController extends GetxController {
   final constants = Rxn<Constants>();
   final error = ''.obs;
 
+
   @override
   void onInit() {
     super.onInit();
+
     fetchConstants();
   }
+
+
 
   Future<void> fetchConstants() async {
     isLoading(true);
     error('');
-
+    
     try {
       final result = await _repository.fetchConstants();
       constants(result);
@@ -42,6 +47,7 @@ class ConstantsController extends GetxController {
   List<Status> get statuses => constants.value?.data.statuses ?? [];
   List<Setting> get settings => constants.value?.data.settings ?? [];
   List<PropertyServiceType> get propertyServiceTypes => constants.value?.data.propertyServiceTypes ?? []; 
+  List<Banner> get banner => constants.value?.data.banners ?? []; 
   String? getSettingValue(String key) {
     return settings.firstWhereOrNull((setting) => setting.key == key)?.value;
   }

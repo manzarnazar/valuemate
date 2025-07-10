@@ -1,13 +1,15 @@
 import 'dart:io';
 
 import 'package:get/get.dart';
+import 'package:valuemate/data/app_exceptions.dart';
 import 'package:valuemate/repository/document_repository/document_repository.dart';
 
 class DocumentUploadController extends GetxController {
   final _repository = DocumentUploadRepository();
 
-  RxBool isLoading = false.obs;
-  RxString statusMessage = ''.obs;
+  final RxBool isLoading = false.obs;
+  final RxString statusMessage = ''.obs;
+  final RxString errorMessage = ''.obs;
 
   Future<void> uploadDocuments({
     required int valuationRequestId,
@@ -15,21 +17,37 @@ class DocumentUploadController extends GetxController {
     required List<File> documentFiles,
     required String token,
   }) async {
-    print("object");
     isLoading.value = true;
+    errorMessage.value = '';
+    statusMessage.value = '';
+
     try {
-      var response = await _repository.uploadDocuments(
+      final response = await _repository.uploadDocuments(
         valuationRequestId: valuationRequestId,
         documentRequirementIds: documentRequirementIds,
         documentFiles: documentFiles,
         token: token,
       );
-      statusMessage.value = response['message'] ?? 'Upload successful';
+
+      if (response is InternetException) {
+        errorMessage.value = 'No internet connection';
+        Get.snackbar('Error', errorMessage.value);
+      } else if (response is RequestTimeOut) {
+        errorMessage.value = 'Request timed out';
+        Get.snackbar('Error', errorMessage.value);
+      } else if (response is Exception) {
+        errorMessage.value = 'Something went wrong: ${response.toString()}';
+        Get.snackbar('Error', errorMessage.value);
+      } else {
+        // If response is valid
+        statusMessage.value = response['message'] ?? 'Documents uploaded successfully';
+        Get.snackbar('Success', statusMessage.value);
+        print("Response is: $response");
+      }
     } catch (e) {
-      print(e);
-      statusMessage.value = e.toString();
+      errorMessage.value = 'Unexpected error: ${e.toString()}';
+      Get.snackbar('Error', errorMessage.value);
     } finally {
-      print(statusMessage);
       isLoading.value = false;
     }
   }
