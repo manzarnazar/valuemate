@@ -10,16 +10,6 @@ class ConstantsController extends GetxController {
   final constants = Rxn<Constants>();
   final error = ''.obs;
 
-
-  @override
-  void onInit() {
-    super.onInit();
-
-    fetchConstants();
-  }
-
-
-
   Future<void> fetchConstants() async {
     isLoading(true);
     error('');

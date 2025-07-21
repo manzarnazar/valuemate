@@ -5,7 +5,7 @@ import 'package:valuemate/components/base_scaffold_widget.dart';
 import 'package:valuemate/view_models/services/contorller/constant/constant_view_model.dart';
 
 class CitySelectionScreen extends StatelessWidget {
-      final ConstantsController _constantsController = Get.put(ConstantsController());
+      final ConstantsController _constantsController = Get.find<ConstantsController>();
 
   final List<Map<String, String>> cities = [
     {'key': 'muscat', 'name': 'Muscat'},

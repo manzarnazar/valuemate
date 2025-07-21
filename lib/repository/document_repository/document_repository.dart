@@ -37,7 +37,7 @@ class DocumentUploadRepository {
     }
 
    try {
-  final streamedResponse = await request.send().timeout(const Duration(seconds: 15));
+  final streamedResponse = await request.send();
   final response = await http.Response.fromStream(streamedResponse);
   return _apiService.returnResponse(response);
 } on SocketException {

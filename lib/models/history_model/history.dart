@@ -10,6 +10,7 @@ class HistoryModel {
   final String area;
   final String totalAmount;
   final String status;
+  final int status_id;
   final String reference;
   final String createdAtDate;
   final String createdAtTime;
@@ -27,6 +28,7 @@ class HistoryModel {
     required this.area,
     required this.totalAmount,
     required this.status,
+    required this.status_id,
     required this.reference,
     required this.createdAtDate,
     required this.createdAtTime,
@@ -46,6 +48,7 @@ class HistoryModel {
       area: json['area'],
       totalAmount: json['total_amount'],
       status: json['status'],
+      status_id: json['status_id'],
       reference: json['reference'],
       createdAtDate: json['created_at_date'],
       createdAtTime: json['created_at_time'],

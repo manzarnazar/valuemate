@@ -11,7 +11,7 @@ class SplashServices {
 
 Future<String> checkFirstTime() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  await Future.delayed(const Duration(seconds: 2));
+  // await Future.delayed(const Duration(seconds: 2));
 
   print("test ${prefs.getBool('is_first_time')}");
 
@@ -22,9 +22,9 @@ Future<String> checkFirstTime() async {
   
   if (isFirstTime) {
     await prefs.setBool('is_first_time', false); // Mark as not first time
-    return RouteName.walk_through; // Go to walkthrough
+    return RouteName.walk_through; 
   } else {
-    return RouteName.dashboard; // Go to home (or your main screen)
+    return RouteName.dashboard;
   }
 }
 

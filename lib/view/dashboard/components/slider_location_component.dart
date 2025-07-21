@@ -75,7 +75,7 @@ class _CustomSliderWithLocationState extends State<CustomSliderWithLocation> {
                       // margin: EdgeInsets.symmetric(horizontal: 8),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
+                        child: Image.network(
                           url,
                           fit: BoxFit.cover,
                           width: double.infinity,

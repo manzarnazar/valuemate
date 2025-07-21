@@ -58,7 +58,7 @@ class _WebViewPageState extends State<WebViewPage> {
                 return;
               }
               else{
-                 Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentSuccessScreen(),));
+                 Navigator.push(context, MaterialPageRoute(builder: (context) => PaymentFailedScreen(),));
                  return;
               }
             } catch (e) {

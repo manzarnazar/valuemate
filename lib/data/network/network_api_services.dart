@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:valuemate/data/network/base_api_services.dart';
-// import 'package:getx_mvvm/data/network/base_api_services.dart';
 import 'package:http/http.dart' as http;
 
 import '../app_exceptions.dart';
@@ -20,7 +18,7 @@ class NetworkApiServices extends BaseApiServices {
     dynamic responseJson;
     try {
       final response =
-          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
+          await http.get(Uri.parse(url));
       responseJson = returnResponse(response);
     
     print(responseJson);
@@ -41,8 +39,7 @@ Future<dynamic> postApi(var data, String url) async {
   dynamic responseJson;
   try {
     final response = await http
-        .post(Uri.parse(url), body: data)
-        .timeout(const Duration(seconds: 10));
+        .post(Uri.parse(url), body: data);
 
     responseJson = returnResponse(response);
 
@@ -51,12 +48,7 @@ Future<dynamic> postApi(var data, String url) async {
     }
 
     return responseJson;
-  } on SocketException {
-    throw InternetException('No internet connection');
-  } on TimeoutException {
-    throw RequestTimeOut('Request timed out');
-  } on http.ClientException catch (e) {
-    throw FetchDataException('Client error: ${e.message}');
+  
   } catch (e) {
     throw FetchDataException('Unexpected error: $e');
   }
@@ -93,15 +85,13 @@ Future<dynamic> postApi(var data, String url) async {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
         },
-      ).timeout(const Duration(seconds: 10));
+      );
 
       print("check ${response.body}");
       responseJson = returnResponse(response);
       return responseJson;
     } on SocketException {
       throw InternetException('No internet connection');
-    } on TimeoutException {
-      throw RequestTimeOut('Request timed out');
     } on http.ClientException catch (e) {
       if (e != null || e.message.contains('SocketException')) {
         throw InternetException('');
