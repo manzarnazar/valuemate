@@ -15,6 +15,7 @@ class DocumentUploadController extends GetxController {
     required int valuationRequestId,
     required List<int> documentRequirementIds,
     required List<File> documentFiles,
+    required List<String> documentTextValues,
     required String token,
   }) async {
     isLoading.value = true;
@@ -26,6 +27,7 @@ class DocumentUploadController extends GetxController {
         valuationRequestId: valuationRequestId,
         documentRequirementIds: documentRequirementIds,
         documentFiles: documentFiles,
+        documentTextValues: documentTextValues,
         token: token,
       );
 

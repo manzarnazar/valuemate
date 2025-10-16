@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:valuemate/res/routes/routes_name.dart';
 import 'package:valuemate/view/booking/booking_item_component.dart';
 import 'package:valuemate/view_models/services/contorller/constant/constant_view_model.dart';
 import 'package:valuemate/view_models/services/contorller/history/history_view_model.dart';
@@ -73,7 +73,9 @@ class _BookingFragmentState extends State<BookingFragment> {
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 40),
                                 child: ElevatedButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Get.toNamed(RouteName.loginView);
+                                  },
                                   child: Text("Login"),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:

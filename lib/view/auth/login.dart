@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _fillDummyData() {
     setState(() {
-      emailCont.text = 'admin@gmail.com';
+      emailCont.text = 'demo@gmail.com';
       passwordCont.text = 'password';
       // Trigger validation after filling
       formKey.currentState?.validate();

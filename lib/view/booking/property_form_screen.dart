@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:valuemate/models/constant_model/constant_model.dart';
 import 'package:valuemate/models/valuation_request_model/valuation_request_model.dart';
+import 'package:valuemate/res/routes/routes_name.dart';
 import 'package:valuemate/utlis/themeutlis.dart';
 import 'package:valuemate/view/dashboard/components/citySelection.dart';
 import 'package:valuemate/view/dashboard/components/service_component.dart';
@@ -38,6 +39,7 @@ class _PropertyFormState extends State<PropertyForm> {
 
   List<XFile> propertyImages = [];
   List<XFile> propertyDocuments = [];
+  Map<int, String> documentTextValues = {}; // Store text values by document requirement ID
   final ImagePicker _picker = ImagePicker();
 
   // Step 2 inputs
@@ -101,7 +103,7 @@ class _PropertyFormState extends State<PropertyForm> {
       print("Error loading token: $e");
       if (mounted) {
         setState(() {
-          _isTokenLoaded = true; // Still stop the loading screen
+          _isTokenLoaded = true;
         });
       }
     }
@@ -145,25 +147,72 @@ class _PropertyFormState extends State<PropertyForm> {
   }
 
   Future<bool?> _showCompanyConfirmationDialog() async {
+    final msg = _constantsController.settings.firstWhere(
+      (setting) => setting.key == "company_selection_msg",
+    );
     return await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
               title: Text("Confirm Company Selection",
                   style: boldTextStyle(color: Colors.orange)),
-              content: Text(
-                  "You have selected ${selectedCompany?.name}. Do you want to proceed with this company or change it?"),
+              content: Text(msg.value),
               actions: [
                 TextButton(
-                    onPressed: () =>
-                        Navigator.pop(context, false), // Change company
+                    onPressed: () => Navigator.pop(context, false),
                     child: Text("CHANGE COMPANY",
                         style: boldTextStyle(color: Colors.red))),
                 TextButton(
-                    onPressed: () => Navigator.pop(context, true), // Proceed
+                    onPressed: () => Navigator.pop(context, true),
                     child: Text("PROCEED",
                         style: boldTextStyle(color: Colors.green)))
               ],
             ));
+  }
+
+  // Show dialog to get text input from user
+  Future<void> _showTextInputDialog(DocumentRequirement requirement) async {
+    final TextEditingController textController = TextEditingController(
+      text: documentTextValues[requirement.id] ?? '',
+    );
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Enter ${requirement.documentName}",
+          style: boldTextStyle(color: Theme.of(context).iconTheme.color),
+        ),
+        content: TextField(
+          controller: textController,
+          decoration: InputDecoration(
+            hintText: "Enter value here",
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("CANCEL", style: boldTextStyle(color: Colors.red)),
+          ),
+          TextButton(
+            onPressed: () {
+              if (textController.text.trim().isNotEmpty) {
+                setState(() {
+                  documentTextValues[requirement.id] = textController.text.trim();
+                });
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Please enter a value')),
+                );
+              }
+            },
+            child: Text("SAVE", style: boldTextStyle(color: Colors.green)),
+          ),
+        ],
+      ),
+    );
   }
 
   void goToNextStep() async {
@@ -230,20 +279,49 @@ class _PropertyFormState extends State<PropertyForm> {
       final requiredDocs = getRequiredDocuments();
       final documentRequirementIds = getDocumentRequirementIds();
 
-      if (propertyDocuments.length != requiredDocs.length) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please upload all required documents')),
-        );
-        return;
+      // Validate that all documents are provided (either file or text)
+      for (var doc in requiredDocs) {
+        if (doc.isFile != 0) {
+          // Check if file is uploaded
+          final docIndex = requiredDocs.indexOf(doc);
+          if (docIndex >= propertyDocuments.length) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Please upload ${doc.documentName}')),
+            );
+            return;
+          }
+        } else {
+          // Check if text value is provided
+          if (!documentTextValues.containsKey(doc.id) || 
+              documentTextValues[doc.id]!.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Please enter ${doc.documentName}')),
+            );
+            return;
+          }
+        }
       }
 
-      List<File> docFiles =
-          propertyDocuments.map((xfile) => File(xfile.path)).toList();
+      // Prepare document files and text values
+      List<File> docFiles = [];
+      List<String> textValues = [];
+      
+      for (var doc in requiredDocs) {
+        if (doc.isFile != 0) {
+          final docIndex = requiredDocs.indexOf(doc);
+          docFiles.add(File(propertyDocuments[docIndex].path));
+          textValues.add(''); // Empty string for file uploads
+        } else {
+          docFiles.add(File('')); // Empty file for text inputs
+          textValues.add(documentTextValues[doc.id] ?? '');
+        }
+      }
 
       await _documentController.uploadDocuments(
         valuationRequestId: _requestController.request_id.value,
         documentRequirementIds: documentRequirementIds,
         documentFiles: docFiles,
+        documentTextValues: textValues, // Pass the text values array
         token: token!,
       );
 
@@ -422,7 +500,7 @@ class _PropertyFormState extends State<PropertyForm> {
                   }
 
                   return SizedBox(
-                    height: 200, // Use fixed height if inside a bottom sheet
+                    height: 200,
                     child: ListView(
                       shrinkWrap: true,
                       children:
@@ -534,8 +612,7 @@ class _PropertyFormState extends State<PropertyForm> {
                               } finally {
                                 _requestController.isLoading.value = false;
                               }
-                            }
-                             else if(selectedPaymentMethodId != 1) {
+                            } else if (selectedPaymentMethodId != 1) {
                               Get.snackbar("COMING SOON", "Work in Progress");
                               Navigator.pop(context);
                             }
@@ -620,7 +697,7 @@ class _PropertyFormState extends State<PropertyForm> {
         setState(() {
           selectedProperty = title;
           selectedPropertyId = id;
-          selectedServiceType = null; // Reset based on new property
+          selectedServiceType = null;
         });
       },
       child: Container(
@@ -783,7 +860,6 @@ class _PropertyFormState extends State<PropertyForm> {
           },
         ),
         SizedBox(height: 16),
-        // Request Type Switch
         Row(
           children: [
             Text(
@@ -794,13 +870,12 @@ class _PropertyFormState extends State<PropertyForm> {
             ),
             Spacer(),
             Switch(
-              value: selectedRequestType?.id == 2, // True for Express (id:2)
+              value: selectedRequestType?.id == 2,
               onChanged: (value) {
                 setState(() {
                   selectedRequestType = _constantsController.requestTypes
                       .firstWhere((type) => type.id == (value ? 2 : 1));
                 });
-                // Add any additional logic when request type changes
               },
               activeColor: Theme.of(context).primaryColor,
             ),
@@ -841,7 +916,6 @@ class _PropertyFormState extends State<PropertyForm> {
                   weight: FontWeight.w600,
                   color: Theme.of(context).iconTheme.color)),
           SizedBox(height: 16),
-
           ...requiredDocs
               .map((doc) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -850,104 +924,107 @@ class _PropertyFormState extends State<PropertyForm> {
                           style: primaryTextStyle(
                               color: Theme.of(context).iconTheme.color)),
                       SizedBox(height: 8),
-                      if (propertyDocuments.length > requiredDocs.indexOf(doc))
-                        Stack(
-                          children: [
-                            Container(
-                              height: 100,
-                              width: 100,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  image: FileImage(File(propertyDocuments[
-                                          requiredDocs.indexOf(doc)]
-                                      .path)),
-                                  fit: BoxFit.cover,
+                      
+                      // Show different UI based on isFile value
+                      if (doc.isFile != 0) ...[
+                        // File upload UI
+                        if (propertyDocuments.length > requiredDocs.indexOf(doc))
+                          Stack(
+                            children: [
+                              Container(
+                                height: 100,
+                                width: 100,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: FileImage(File(propertyDocuments[
+                                            requiredDocs.indexOf(doc)]
+                                        .path)),
+                                    fit: BoxFit.cover,
+                                  ),
+                                  borderRadius: radius(),
                                 ),
-                                borderRadius: radius(),
                               ),
-                            ),
-                            Positioned(
-                              top: 2,
-                              right: 2,
-                              child: IconButton(
-                                icon: Icon(Icons.close,
-                                    size: 18, color: Colors.red),
-                                onPressed: () {
-                                  setState(() => propertyDocuments
-                                      .removeAt(requiredDocs.indexOf(doc)));
-                                },
-                              ),
-                            )
-                          ],
+                              Positioned(
+                                top: 2,
+                                right: 2,
+                                child: IconButton(
+                                  icon: Icon(Icons.close,
+                                      size: 18, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() => propertyDocuments
+                                        .removeAt(requiredDocs.indexOf(doc)));
+                                  },
+                                ),
+                              )
+                            ],
+                          ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            pickDocumentForRequirement(doc);
+                          },
+                          style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 10),
+                              backgroundColor: context.primaryColor,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: radius(defaultRadius))),
+                          icon: Icon(Icons.upload_file, color: Colors.white),
+                          label: Text("Upload ${doc.documentName}",
+                              style:
+                                  boldTextStyle(size: 16, color: Colors.white)),
                         ),
-                      ElevatedButton.icon(
-                        onPressed: () => pickDocumentForRequirement(doc),
-                        style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 10),
-                            backgroundColor: context.primaryColor,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: radius(defaultRadius))),
-                        icon: Icon(Icons.upload_file, color: Colors.white),
-                        label: Text("Upload ${doc.documentName}",
-                            style:
-                                boldTextStyle(size: 16, color: Colors.white)),
-                      ),
+                      ] else ...[
+                        // Text input UI
+                        if (documentTextValues.containsKey(doc.id) && 
+                            documentTextValues[doc.id]!.isNotEmpty)
+                          Container(
+                            padding: EdgeInsets.all(12),
+                            margin: EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.green),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    documentTextValues[doc.id]!,
+                                    style: primaryTextStyle(
+                                      color: Theme.of(context).iconTheme.color,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _showTextInputDialog(doc);
+                          },
+                          style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 10, horizontal: 10),
+                              backgroundColor: context.primaryColor,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: radius(defaultRadius))),
+                          icon: Icon(Icons.edit, color: Colors.white),
+                          label: Text(
+                              documentTextValues.containsKey(doc.id) 
+                                  ? "Edit ${doc.documentName}"
+                                  : "Enter ${doc.documentName}",
+                              style:
+                                  boldTextStyle(size: 16, color: Colors.white)),
+                        ),
+                      ],
                       SizedBox(height: 16),
                     ],
                   ))
               .toList(),
-
-          SizedBox(height: 32),
-          // Text("Upload Property Images",
-          //     style: primaryTextStyle(
-          //         size: 18,
-          //         weight: FontWeight.w600,
-          //         color: Theme.of(context).iconTheme.color)),
-          // SizedBox(height: 16),
-          // Wrap(
-          //   spacing: 12,
-          //   runSpacing: 12,
-          //   children: propertyImages.map((file) {
-          //     return Stack(
-          //       children: [
-          //         Container(
-          //           height: 100,
-          //           width: 100,
-          //           decoration: BoxDecoration(
-          //             image: DecorationImage(
-          //               image: FileImage(File(file.path)),
-          //               fit: BoxFit.cover,
-          //             ),
-          //             borderRadius: radius(),
-          //           ),
-          //         ),
-          //         Positioned(
-          //           top: 2,
-          //           right: 2,
-          //           child: IconButton(
-          //             icon: Icon(Icons.close, size: 18, color: Colors.red),
-          //             onPressed: () {
-          //               setState(() => propertyImages.remove(file));
-          //             },
-          //           ),
-          //         )
-          //       ],
-          //     );
-          //   }).toList(),
-          // ),
-          // SizedBox(height: 12),
-          // ElevatedButton.icon(
-          //   style: ElevatedButton.styleFrom(
-          //       padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-          //       backgroundColor: context.primaryColor,
-          //       shape: RoundedRectangleBorder(
-          //           borderRadius: radius(defaultRadius))),
-          //   onPressed: pickImages,
-          //   icon: Icon(Icons.add_a_photo, color: Colors.white),
-          //   label: Text("Add Image",
-          //       style: boldTextStyle(size: 16, color: Colors.white)),
-          // ),
         ],
       ),
     );
@@ -973,20 +1050,6 @@ class _PropertyFormState extends State<PropertyForm> {
           ),
           if (selectedCompany != null) ...[
             const SizedBox(height: 15),
-            // if (widget.preSelected)
-            //   Row(
-            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //     children: [
-            //       TextButton(
-            //           onPressed: () {
-            //             _showCompanyBottomSheet();
-            //           },
-            //           child: Text(
-            //             "Change Company",
-            //             style: boldTextStyle(color: context.primaryColor),
-            //           ))
-            //     ],
-            //   ),
             const SizedBox(height: 5),
             _buildInfoCard(
               children: [
@@ -1005,8 +1068,7 @@ class _PropertyFormState extends State<PropertyForm> {
             if (showDocumentStep)
               _buildInfoCard(
                 children: [
-                  _buildInfoRow("Documents:", "${propertyDocuments.length}"),
-                  // const SizedBox(height: 12),
+                  _buildInfoRow("Documents:", "${propertyDocuments.length + documentTextValues.length}"),
                 ],
               ),
           ],
@@ -1062,7 +1124,7 @@ class _PropertyFormState extends State<PropertyForm> {
         return "N/A";
       }
 
-      return "\$${matchingPricings.first.price.replaceAll(".000", "")}";
+  return matchingPricings.first.price.replaceAll(".000", "");
     } catch (e) {
       return "N/A";
     }
@@ -1149,7 +1211,6 @@ class _PropertyFormState extends State<PropertyForm> {
 
   @override
   Widget build(BuildContext context) {
-    // If no token, show login button
     if (!_isTokenLoaded) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -1167,16 +1228,16 @@ class _PropertyFormState extends State<PropertyForm> {
             16.height,
             Text("Login to your account to continue",
                 style: TextStyle(fontSize: 14, color: Colors.grey)),
-            // Add the dummy data button here
             16.height,
-
             Row(
               children: [
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Get.toNamed(RouteName.loginView);
+                      },
                       child: Text("Login"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,

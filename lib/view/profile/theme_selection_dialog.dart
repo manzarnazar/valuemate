@@ -13,7 +13,7 @@ class ThemeSelectionDaiLogState extends State<ThemeSelectionDaiLog> {
   final ThemeController themeController = Get.find<ThemeController>(); // ✅ FIXED
 
   List<String> themeModeList = ["Light", "Dark", "System default"];
-  int? currentIndex = 0;
+  int? currentIndex = 1; // Default to dark
 
   @override
   void initState() {
@@ -22,8 +22,8 @@ class ThemeSelectionDaiLogState extends State<ThemeSelectionDaiLog> {
   }
 
   Future<void> init() async {
-    currentIndex = getIntAsync("theme_mode_index", defaultValue: 0);
-    setState(() {});
+  currentIndex = getIntAsync("theme_mode_index", defaultValue: 1); // Default to dark
+  setState(() {});
   }
 
   Future<void> _changeTheme(int index) async {
@@ -34,7 +34,7 @@ class ThemeSelectionDaiLogState extends State<ThemeSelectionDaiLog> {
         themeController.setTheme(false);
         break;
       case 1:
-        themeController.setTheme(true);
+        themeController.setTheme(true); // Always set dark if selected
         break;
       case 2:
         final brightness = MediaQuery.of(context).platformBrightness;

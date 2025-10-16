@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:nb_utils/nb_utils.dart';
+
 import 'package:valuemate/models/constant_model/constant_model.dart';
 import 'package:valuemate/repository/constant_repository/constant_repository.dart';
 
@@ -24,6 +24,8 @@ class ConstantsController extends GetxController {
       isLoading(false);
     }
   }
+
+
 
   // Helper getters
   List<PaymentMethod> get paymentMethods => constants.value?.data.paymentMethods ?? [];

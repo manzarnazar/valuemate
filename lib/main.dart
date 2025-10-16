@@ -7,34 +7,36 @@ import 'package:valuemate/theme_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initialize(); // <-- this is critical for nb_utils
+
+  await initialize(); // ✅ Initialize nb_utils first!
+
+  Get.put(ThemeController()); // ✅ Then register controller
 
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      initialBinding: BindingsBuilder(() {
-        Get.put(ThemeController());
-      }),
-      debugShowCheckedModeBanner: false,
-      title: 'ValueMate',
-      theme: AppTheme.lightTheme(), // Using light theme
-      darkTheme: AppTheme.darkTheme(), // Using dark theme
-      // themeMode: ThemeMode.light, // Set default theme mode to light
-      locale: const Locale('en', 'US'),
-      getPages: AppRoutes.appRoutes(),
-      builder: (context, child) {
-        return MediaQuery(
-          child: child!,
-          data: MediaQuery.of(context)
-              .copyWith(textScaler: TextScaler.linear(1.0)),
-        );
-      },
-    );
+    final ThemeController themeController = Get.find();
+
+    return Obx(() => GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'ValueMate',
+          theme: AppTheme.lightTheme(),
+          darkTheme: AppTheme.darkTheme(),
+          themeMode: themeController.themeMode.value, // ✅ reactive theme
+          locale: const Locale('en', 'US'),
+          getPages: AppRoutes.appRoutes(),
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1.0)),
+              child: child!,
+            );
+          },
+        ));
   }
 }

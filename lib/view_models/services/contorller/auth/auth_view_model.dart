@@ -10,6 +10,7 @@ class AuthController extends GetxController {
   final _authRepository = AuthRepository();
 
   final RxBool _loading = false.obs;
+   RxBool isDeleteLoading = false.obs;
   bool get loading => _loading.value;
 
   final Rx<AuthResponseModel?> _authResponse = Rx<AuthResponseModel?>(null);
@@ -107,6 +108,97 @@ Future<void> logout() async {
     _loading.value = false;
   }
 }
+
+Future<void> updateProfile(String firstName, String lastName, String email) async {
+    _loading.value = true;
+    _errorMessage.value = '';
+
+    try {
+      final token = await UserPreference().getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('No authentication token found');
+      }
+
+      final request = {
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+      };
+
+     final user = await UserPreference().getUser();
+      
+
+      final response = await _authRepository.edit_profile(request,user?.id, token);
+      print("janab ${response.data}");
+
+      if (response.status == true) {
+        // Update local user data
+
+        Get.snackbar(
+          'Success',
+          'Profile updated successfully',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: Duration(seconds: 2),
+        );
+      } else {
+        _errorMessage.value = response.message ?? 'Failed to update profile';
+        Get.snackbar('Error', _errorMessage.value);
+      }
+    } catch (e) {
+      _errorMessage.value = e.toString();
+      print('Update profile error: $e');
+      Get.snackbar('Error', 'Failed to update profile');
+    } finally {
+      _loading.value = false;
+    }
+  }
+
+    Future<void> deleteAccount() async {
+    _loading.value = true;
+    _errorMessage.value = '';
+
+    try {
+      final token = await UserPreference().getToken();
+      final user = await UserPreference().getUser();
+
+      if (token == null || token.isEmpty) {
+        throw Exception('No authentication token found');
+      }
+      if (user == null || user.id == null) {
+        throw Exception('No user found');
+      }
+      isDeleteLoading.value =true;
+      // You can pass an empty map or any required body as per your API
+      final result = await _authRepository.deleteUser(user.id, token);
+
+      if (result.status == true) {
+        isDeleteLoading.value =false;
+        await UserPreference().removeUser();
+        _authResponse.value = null;
+        Get.offAllNamed(RouteName.loginView);
+        Get.snackbar(
+          'Success',
+          'Account deleted successfully',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          duration: Duration(seconds: 2),
+        );
+      } else {
+        isDeleteLoading.value =false;
+        _errorMessage.value = 'Failed to delete account';
+        Get.snackbar('Error', _errorMessage.value);
+      }
+    } catch (e) {
+      _errorMessage.value = e.toString();
+      print('Delete account error: $e');
+      Get.snackbar('Error', 'Failed to delete account');
+    } finally {
+      _loading.value = false;
+    }
+  }
+
+
 
   void clear() {
     _authResponse.value = null;

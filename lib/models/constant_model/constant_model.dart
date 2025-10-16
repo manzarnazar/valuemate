@@ -366,12 +366,14 @@ class DocumentRequirement {
   final int propertyTypeId;
   final int serviceTypeId;
   final String documentName;
+  final int isFile;
 
   DocumentRequirement({
     required this.id,
     required this.propertyTypeId,
     required this.serviceTypeId,
     required this.documentName,
+    required this.isFile,
   });
 
   factory DocumentRequirement.fromJson(Map<String, dynamic> json) {
@@ -380,6 +382,7 @@ class DocumentRequirement {
       propertyTypeId: json['property_type_id'] ?? 0,
       serviceTypeId: json['service_type_id'] ?? 0,
       documentName: json['document_name'] ?? '',
+      isFile: json['is_file'] ,
     );
   }
 }

@@ -12,6 +12,7 @@ class DocumentUploadRepository {
     required int valuationRequestId,
     required List<int> documentRequirementIds,
     required List<File> documentFiles,
+    required List<String> documentTextValues,
     required String token,
   }) async {
     var uri = Uri.parse('https://valuma8.com/api/upload-valuation-documents'); // replace with actual URL
@@ -26,32 +27,39 @@ class DocumentUploadRepository {
 
     for (int i = 0; i < documentRequirementIds.length; i++) {
       request.fields['document_requirement_id[$i]'] = documentRequirementIds[i].toString();
+      // Add text value if present and not empty
+      if (documentTextValues.length > i && documentTextValues[i].isNotEmpty) {
+        request.fields['document_text_value[$i]'] = documentTextValues[i];
+      }
       print(request.fields['document_requirement_id[$i]']);
     }
 
     for (int i = 0; i < documentFiles.length; i++) {
-      request.files.add(await http.MultipartFile.fromPath(
-        'document_file[$i]',
-        documentFiles[i].path,
-      ));
+      // Only add file if path is not empty (for text-only requirements, path will be empty)
+      if (documentFiles[i].path.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'document_file[$i]',
+          documentFiles[i].path,
+        ));
+      }
     }
 
-   try {
-  final streamedResponse = await request.send();
-  final response = await http.Response.fromStream(streamedResponse);
-  return _apiService.returnResponse(response);
-} on SocketException {
-  throw InternetException('No internet connection');
-} on TimeoutException {
-  throw RequestTimeOut('Request timed out');
-} on http.ClientException catch (e) {
-  if (e != null || e.message.contains('SocketException')) {
-    throw InternetException('');
-  }
-  throw FetchDataException('Client error: ${e.message}');
-} catch (e) {
-  print('Unhandled error in uploadDocuments: $e');
-  rethrow;
-}
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      return _apiService.returnResponse(response);
+    } on SocketException {
+      throw InternetException('No internet connection');
+    } on TimeoutException {
+      throw RequestTimeOut('Request timed out');
+    } on http.ClientException catch (e) {
+      if (e.message.contains('SocketException')) {
+        throw InternetException('');
+      }
+      throw FetchDataException('Client error: ${e.message}');
+    } catch (e) {
+      print('Unhandled error in uploadDocuments: $e');
+      rethrow;
+    }
   }
 }

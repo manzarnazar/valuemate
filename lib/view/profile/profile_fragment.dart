@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+// import 'package:valuemate/res/routes/routes.dart';
 import 'package:valuemate/res/routes/routes_name.dart';
-import 'package:valuemate/view/profile/setting.dart';
+import 'package:valuemate/view/profile/legal_page.dart';
 import 'package:valuemate/view/profile/theme_selection_dialog.dart';
 import 'package:valuemate/view_models/services/contorller/auth/auth_view_model.dart';
 import 'package:valuemate/view_models/services/contorller/constant/constant_view_model.dart';
 
 class ProfileFragment extends StatefulWidget {
+  const ProfileFragment({super.key});
+
   @override
   _ProfileFragmentState createState() => _ProfileFragmentState();
 }
@@ -18,7 +23,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
   final ConstantsController _constantController =
       Get.find<ConstantsController>();
 
-  bool isLoggedIn = false; // Change this to false to see the sign-in button
+  bool isLoggedIn = false;
   String? fname;
   String? lname;
   String? email;
@@ -26,8 +31,6 @@ class _ProfileFragmentState extends State<ProfileFragment> {
   @override
   void initState() {
     super.initState();
-
-    // Load token asynchronously
     _loadToken();
   }
 
@@ -54,6 +57,31 @@ class _ProfileFragmentState extends State<ProfileFragment> {
     }
   }
 
+  Future<void> _showDeleteAccountDialog() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: const Text(
+            'Are you sure you want to delete your account? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          TextButton(
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      authController.deleteAccount();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +97,6 @@ class _ProfileFragmentState extends State<ProfileFragment> {
         child: Column(
           children: [
             if (isLoggedIn) _buildUserProfileSection(),
-            // _buildGeneralSection(),
             _buildAboutAppSection(),
             if (isLoggedIn) _buildDangerZoneSection(),
             if (!isLoggedIn) _buildSignInButton(),
@@ -100,7 +127,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
 
   Widget _buildUserProfileSection() {
     return Container(
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         color: context.cardColor,
@@ -109,111 +136,59 @@ class _ProfileFragmentState extends State<ProfileFragment> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Stack(
                   alignment: Alignment.bottomCenter,
                   clipBehavior: Clip.none,
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 35,
                       backgroundImage: NetworkImage(
                           'https://randomuser.me/api/portraits/men/1.jpg'),
                     ),
+                    // Fixed: Positioned is now direct child of Stack
                     Positioned(
                       bottom: -6,
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: context.primaryColor,
-                          border: Border.all(color: Colors.white, width: 2),
-                          borderRadius: BorderRadius.circular(16),
+                      child: GestureDetector(
+                        onTap: () {
+                          Get.toNamed(RouteName.edit_profile);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: context.primaryColor,
+                            border: Border.all(color: Colors.white, width: 2),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Text('Edit',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 12)),
                         ),
-                        child: Text('Edit',
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 12)),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(width: 24),
+                const SizedBox(width: 24),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${fname} ${lname}',
+                      Text('${fname ?? ''} ${lname ?? ''}',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: context.primaryColor,
                               fontSize: 16)),
-                      Text('$email', style: TextStyle(color: Colors.grey)),
+                      Text('${email ?? ''}',
+                          style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          // Container(
-          //   decoration: BoxDecoration(
-          //     borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
-          //     color: context.primaryColor,
-          //   ),
-          //   child: Padding(
-          //     padding: EdgeInsets.all(16),
-          //     child: Row(
-          //       children: [
-          //         Icon(Icons.account_balance_wallet, color: Colors.white),
-          //         SizedBox(width: 8),
-          //         Text('Wallet Balance', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          //         Spacer(),
-          //         Text('\$$walletBalance', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGeneralSection() {
-    return Card(
-      margin: EdgeInsets.all(16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: context.cardColor,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: context.primaryColor.withOpacity(0.1),
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(16)),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('GENERAL',
-                        style: TextStyle(
-                            color: context.primaryColor,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          _buildListTile(icon: Icons.history, title: 'Wallet History'),
-          _buildListTile(icon: Icons.credit_card, title: 'Bank Details'),
-          _buildListTile(icon: Icons.favorite, title: 'Favorites'),
-          _buildListTile(icon: Icons.people, title: 'Favorite Providers'),
-          _buildListTile(icon: Icons.article, title: 'Blogs'),
-          _buildListTile(icon: Icons.star, title: 'Rate Us'),
-          _buildListTile(icon: Icons.reviews, title: 'My Reviews'),
-          _buildListTile(icon: Icons.help, title: 'Help Desk'),
         ],
       ),
     );
@@ -221,55 +196,31 @@ class _ProfileFragmentState extends State<ProfileFragment> {
 
   Widget _buildAboutAppSection() {
     return Card(
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: context.cardColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Row(
-          //   children: [
-          //     Expanded(
-          //       child: Container(
-          //         decoration: BoxDecoration(
-          //           color: context.primaryColor.withOpacity(0.1),
-          //           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          //         ),
-          //         child: Padding(
-          //           padding: EdgeInsets.all(16),
-          //           child: Text('ABOUT APP', style: TextStyle(color: context.primaryColor, fontWeight: FontWeight.bold)),
-          //         ),
-          //       ),
-          //     ),
-          //   ],
-          // ),
-
           _buildListTile(
             icon: Icons.privacy_tip,
             title: 'Privacy Policy',
             onTap: () {
-              Get.snackbar("Privacy Policy tapped", "Coming soon.....");
-              // Handle Privacy Policy tap
-              print('Privacy Policy tapped');
+              Get.to(() => LegalPageView(isTerms: false));
             },
           ),
           _buildListTile(
             icon: Icons.description,
             title: 'Terms & Conditions',
             onTap: () {
-              Get.snackbar("Terms & Conditions tapped", "Coming soon.....");
-              // Handle Terms & Conditions tap
-              print('Terms & Conditions tapped');
+              Get.to(() => LegalPageView(isTerms: true));
             },
           ),
           _buildListTile(
             icon: Icons.support,
             title: 'Support Chat',
             onTap: () {
-              Get.snackbar(
-                  "Terms & Conditions tapped", "We are working on it.....");
-              // Handle Help & Support tap
-              print('Help & Support tapped');
+              Get.snackbar("Support Chat", "We are working on it.....");
             },
           ),
           _buildListTile(
@@ -281,10 +232,8 @@ class _ProfileFragmentState extends State<ProfileFragment> {
                   (setting) => setting.key == "helpline_number",
                 );
                 final helplineNumber = helplineSetting.value;
-                print('Helpline Number tapped: $helplineNumber');
                 await _launchDialer(helplineNumber);
               } catch (e) {
-                print('Error finding helpline number: $e');
                 Fluttertoast.showToast(
                   msg: "Could not find helpline number",
                   toastLength: Toast.LENGTH_SHORT,
@@ -293,7 +242,6 @@ class _ProfileFragmentState extends State<ProfileFragment> {
               }
             },
           ),
-
           _buildListTile(
             icon: Icons.dark_mode,
             title: 'Theme',
@@ -305,6 +253,32 @@ class _ProfileFragmentState extends State<ProfileFragment> {
               );
             },
           ),
+          if (isLoggedIn)
+            Obx(() => ListTile(
+                  leading:
+                      const Icon(Icons.delete, color: Colors.red, size: 20),
+                  title: Text(
+                    'Delete Account',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  trailing: authController.isDeleteLoading.value
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.red,
+                          ),
+                        )
+                      : Icon(Icons.chevron_right,
+                          color: Theme.of(context).iconTheme.color),
+                  onTap: authController.isDeleteLoading.value
+                      ? null
+                      : _showDeleteAccountDialog,
+                )),
         ],
       ),
     );
@@ -312,7 +286,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
 
   Widget _buildDangerZoneSection() {
     return Card(
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: context.cardColor,
       child: Column(
@@ -320,8 +294,8 @@ class _ProfileFragmentState extends State<ProfileFragment> {
         children: [
           Center(
             child: Obx(() {
-              return Container(
-                height: 48, // Fixed height for both button and loader
+              return SizedBox(
+                height: 48,
                 child: authController.loading
                     ? const Center(child: CircularProgressIndicator())
                     : TextButton(
@@ -346,7 +320,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
 
   Widget _buildSignInButton() {
     return Card(
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       color: context.cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: _buildListTile(
@@ -361,16 +335,16 @@ class _ProfileFragmentState extends State<ProfileFragment> {
 
   Widget _buildVersionInfo() {
     return Padding(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: Center(
         child: TextButton(
-          child: Text('v1.0.0', style: TextStyle(color: Colors.grey)),
+          child: const Text('v1.0.0', style: TextStyle(color: Colors.grey)),
           onPressed: () {
             showAboutDialog(
               context: context,
               applicationName: 'My App',
               applicationVersion: '1.0.0',
-              applicationIcon: FlutterLogo(size: 50),
+              applicationIcon: const FlutterLogo(size: 50),
             );
           },
         ),
@@ -398,8 +372,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
       ),
       trailing:
           Icon(Icons.chevron_right, color: Theme.of(context).iconTheme.color),
-      onTap: onTap ??
-          () {}, // Provide empty function if onTap is null to make it tappable
+      onTap: onTap ?? () {},
     );
   }
 }

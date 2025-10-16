@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 import 'package:valuemate/res/routes/routes_name.dart';
+import 'package:valuemate/view/auth/edit_profile.dart';
 import 'package:valuemate/view/auth/login.dart';
 import 'package:valuemate/view/booking/property_form_screen.dart';
 import 'package:valuemate/view/dashboard/dashboard_screen.dart';
+import 'package:valuemate/view/profile/setting.dart';
 import 'package:valuemate/view/splash.dart';
 import 'package:valuemate/view/walk_through/walk_through.dart';
 
@@ -28,6 +30,20 @@ class AppRoutes {
         ),
        
         GetPage(
+          name: RouteName.edit_profile,
+          page: () => EditProfilePage(),
+          transitionDuration: Duration(milliseconds: 250),
+          transition: Transition.downToUp,
+        ),
+       
+        GetPage(
+          name: RouteName.settings,
+          page: () => SettingScreen(),
+          transitionDuration: Duration(milliseconds: 250),
+          transition: Transition.downToUp,
+        ),
+       
+        GetPage(
           name: RouteName.dashboard,
           page: () {
             final args = Get.arguments ?? {};
@@ -44,17 +60,6 @@ class AppRoutes {
           transitionDuration: Duration(milliseconds: 250),
           transition: Transition.downToUp,
         ),
-        // GetPage(
-        //   name: RouteName.loginView,
-        //   page: () => LoginView() ,
-        //   transitionDuration: Duration(milliseconds: 250),
-        //   transition: Transition.leftToRightWithFade ,
-        // ) ,
-        // GetPage(
-        //   name: RouteName.homeView,
-        //   page: () => HomeView() ,
-        //   transitionDuration: Duration(milliseconds: 250),
-        //   transition: Transition.leftToRightWithFade ,
-        // ) ,
+       
       ];
 }
