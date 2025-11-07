@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:valuemate/models/constant_model/constant_model.dart';
 import 'package:valuemate/models/valuation_request_model/valuation_request_model.dart';
@@ -38,8 +39,9 @@ class _PropertyFormState extends State<PropertyForm> {
   final ValuationViewModel _requestController = Get.put(ValuationViewModel());
 
   List<XFile> propertyImages = [];
-  List<XFile> propertyDocuments = [];
-  Map<int, String> documentTextValues = {}; // Store text values by document requirement ID
+  List<PlatformFile> propertyDocuments = [];
+  Map<int, String> documentTextValues =
+      {}; // Store text values by document requirement ID
   final ImagePicker _picker = ImagePicker();
 
   // Step 2 inputs
@@ -84,6 +86,7 @@ class _PropertyFormState extends State<PropertyForm> {
       return ServiceType(
         serviceTypeId: service.serviceTypeId,
         serviceType: service.serviceType,
+        service_type_ar: service.serviceTypeAr,
       );
     }).toList();
   }
@@ -121,12 +124,24 @@ class _PropertyFormState extends State<PropertyForm> {
   }
 
   int get totalSteps {
-    return widget.preSelected
-        ? (showDocumentStep ? 4 : 3)
-        : (showDocumentStep ? 5 : 4);
+    // Check if there are required documents
+    final requiredDocs = getRequiredDocuments();
+    final hasDocuments = requiredDocs.isNotEmpty;
+
+    if (widget.preSelected) {
+      // If preselected and no documents, skip document step
+      return (showDocumentStep && hasDocuments) ? 4 : 3;
+    } else {
+      // If not preselected and no documents, skip document step
+      return (showDocumentStep && hasDocuments) ? 5 : 4;
+    }
   }
 
   List<DocumentRequirement> getRequiredDocuments() {
+    if (selectedPropertyId == null || selectedServiceType == null) {
+      return [];
+    }
+
     return _constantsController.documentRequirements.where((req) {
       return req.propertyTypeId == selectedPropertyId &&
           req.serviceTypeId == selectedServiceType?.serviceTypeId;
@@ -147,23 +162,24 @@ class _PropertyFormState extends State<PropertyForm> {
   }
 
   Future<bool?> _showCompanyConfirmationDialog() async {
-    final msg = _constantsController.settings.firstWhere(
+    final msg = _constantsController.settings.firstWhereOrNull(
       (setting) => setting.key == "company_selection_msg",
     );
     return await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-              title: Text("Confirm Company Selection",
+              title: Text("confirm_company".tr,
                   style: boldTextStyle(color: Colors.orange)),
-              content: Text(msg.value),
+              content: Text(msg?.value ??
+                  'Are you sure you want to proceed with this company?'),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: Text("CHANGE COMPANY",
+                    child: Text("change_company".tr,
                         style: boldTextStyle(color: Colors.red))),
                 TextButton(
                     onPressed: () => Navigator.pop(context, true),
-                    child: Text("PROCEED",
+                    child: Text("proceed_company".tr,
                         style: boldTextStyle(color: Colors.green)))
               ],
             ));
@@ -199,12 +215,15 @@ class _PropertyFormState extends State<PropertyForm> {
             onPressed: () {
               if (textController.text.trim().isNotEmpty) {
                 setState(() {
-                  documentTextValues[requirement.id] = textController.text.trim();
+                  documentTextValues[requirement.id] =
+                      textController.text.trim();
                 });
                 Navigator.pop(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Please enter a value')),
+                  SnackBar(
+                      content: Text('please_enter_value'
+                          .trParams({"docName": requirement.documentName}))),
                 );
               }
             },
@@ -219,17 +238,26 @@ class _PropertyFormState extends State<PropertyForm> {
     // Step 1: Validate property type
     if (currentStep == 1 && selectedProperty.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please select a property type')),
+        SnackBar(content: Text('please_select_property_type'.tr)),
       );
       return;
     }
 
     // Step 2: Validate location and area
-    if (currentStep == 2 && (selectedCityName.isEmpty || area.isEmpty)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all location details')),
-      );
-      return;
+    if (currentStep == 2) {
+      if (selectedCityName.isEmpty || area.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('enter_location_area'.tr)),
+        );
+        return;
+      }
+
+      if (selectedServiceType == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please select a service type')),
+        );
+        return;
+      }
     }
 
     bool isRequestStep = (widget.preSelected && currentStep == 2) ||
@@ -239,7 +267,7 @@ class _PropertyFormState extends State<PropertyForm> {
     if (isRequestStep) {
       if (selectedCompany == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please select a company')),
+          SnackBar(content: Text('please_select_company'.tr)),
         );
         return;
       }
@@ -258,7 +286,7 @@ class _PropertyFormState extends State<PropertyForm> {
         userId: user!.id,
         propertyTypeId: selectedPropertyId,
         serviceTypeId: selectedServiceType?.serviceTypeId,
-        requestTypeId: 1,
+        requestTypeId: selectedRequestType?.id ?? 1,
         locationId: selectedCityKey?.toInt() ?? 0,
         area: int.tryParse(area) ?? 0,
         reference: '123abc',
@@ -277,6 +305,22 @@ class _PropertyFormState extends State<PropertyForm> {
 
     if (isDocumentStep && showDocumentStep) {
       final requiredDocs = getRequiredDocuments();
+
+      // If there are no required documents, skip this step
+      if (requiredDocs.isEmpty) {
+        // Go to next step
+        if (!_requestController.isLoading.value && currentStep < totalSteps) {
+          setState(() {
+            currentStep++;
+            _pageController.nextPage(
+              duration: Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          });
+        }
+        return;
+      }
+
       final documentRequirementIds = getDocumentRequirementIds();
 
       // Validate that all documents are provided (either file or text)
@@ -286,16 +330,20 @@ class _PropertyFormState extends State<PropertyForm> {
           final docIndex = requiredDocs.indexOf(doc);
           if (docIndex >= propertyDocuments.length) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Please upload ${doc.documentName}')),
+              SnackBar(
+                  content: Text('please_upload_doc'
+                      .trParams({"docName": doc.documentName}))),
             );
             return;
           }
         } else {
           // Check if text value is provided
-          if (!documentTextValues.containsKey(doc.id) || 
+          if (!documentTextValues.containsKey(doc.id) ||
               documentTextValues[doc.id]!.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Please enter ${doc.documentName}')),
+              SnackBar(
+                  content: Text('please_enter_doc'
+                      .trParams({"docName": doc.documentName}))),
             );
             return;
           }
@@ -305,12 +353,18 @@ class _PropertyFormState extends State<PropertyForm> {
       // Prepare document files and text values
       List<File> docFiles = [];
       List<String> textValues = [];
-      
+
       for (var doc in requiredDocs) {
         if (doc.isFile != 0) {
           final docIndex = requiredDocs.indexOf(doc);
-          docFiles.add(File(propertyDocuments[docIndex].path));
-          textValues.add(''); // Empty string for file uploads
+          if (docIndex < propertyDocuments.length &&
+              propertyDocuments[docIndex].path != null) {
+            docFiles.add(File(propertyDocuments[docIndex].path!));
+            textValues.add(''); // Empty string for file uploads
+          } else {
+            docFiles.add(File('')); // Empty file if no document selected
+            textValues.add('');
+          }
         } else {
           docFiles.add(File('')); // Empty file for text inputs
           textValues.add(documentTextValues[doc.id] ?? '');
@@ -383,20 +437,44 @@ class _PropertyFormState extends State<PropertyForm> {
 
   Future<void> pickDocumentForRequirement(
       DocumentRequirement requirement) async {
-    final XFile? doc = await _picker.pickImage(source: ImageSource.gallery);
-    if (doc != null) {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png'],
+      allowMultiple: false,
+    );
+
+    if (result != null && result.files.isNotEmpty) {
+      final PlatformFile file = result.files.first;
       setState(() {
         final requiredDocs = getRequiredDocuments();
         final index = requiredDocs.indexWhere((r) => r.id == requirement.id);
 
         if (index != -1) {
           if (index < propertyDocuments.length) {
-            propertyDocuments[index] = doc;
+            propertyDocuments[index] = file;
           } else {
-            propertyDocuments.add(doc);
+            propertyDocuments.add(file);
           }
         }
       });
+    }
+  }
+
+  IconData _getFileIcon(String? extension) {
+    switch (extension?.toLowerCase()) {
+      case 'pdf':
+        return Icons.picture_as_pdf;
+      case 'doc':
+      case 'docx':
+        return Icons.description;
+      case 'txt':
+        return Icons.text_snippet;
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+        return Icons.image;
+      default:
+        return Icons.insert_drive_file;
     }
   }
 
@@ -641,16 +719,31 @@ class _PropertyFormState extends State<PropertyForm> {
 
   Widget buildHeader() {
     String getStepTitle() {
+      final requiredDocs = getRequiredDocuments();
+      final hasDocuments = requiredDocs.isNotEmpty;
+
       if (currentStep == 1) {
-        return "Choose Property Type";
+        return "choose_property_type".tr;
       } else if (currentStep == 2) {
-        return "Location and Area";
+        return "location_area".tr;
       } else if (currentStep == 3) {
-        return widget.preSelected ? "Upload Documents" : "Select Company";
+        if (widget.preSelected) {
+          return (showDocumentStep && hasDocuments)
+              ? "upload_documents".tr
+              : "review_summary".tr;
+        } else {
+          return "select_company".tr;
+        }
       } else if (currentStep == 4) {
-        return widget.preSelected ? "Review Summary" : "Upload Documents";
+        if (widget.preSelected) {
+          return "review_summary".tr;
+        } else {
+          return (showDocumentStep && hasDocuments)
+              ? "upload_documents".tr
+              : "review_summary".tr;
+        }
       } else if (currentStep == 5) {
-        return "Review Summary";
+        return "review_summary".tr;
       } else {
         return "";
       }
@@ -677,11 +770,14 @@ class _PropertyFormState extends State<PropertyForm> {
                 valueColor: AlwaysStoppedAnimation<Color>(context.primaryColor),
               ),
             ),
-            Text(
-              "$currentStep of $totalSteps",
-              style: secondaryTextStyle(
-                size: 10,
-                color: Theme.of(context).iconTheme.color,
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Text(
+                "$currentStep of $totalSteps",
+                style: secondaryTextStyle(
+                  size: 10,
+                  color: Theme.of(context).iconTheme.color,
+                ),
               ),
             ),
           ],
@@ -690,215 +786,250 @@ class _PropertyFormState extends State<PropertyForm> {
     );
   }
 
-  Widget buildPropertyOption(String title, int id, IconData icon, Color color) {
-    bool isSelected = selectedProperty == title;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedProperty = title;
-          selectedPropertyId = id;
-          selectedServiceType = null;
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        margin: EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : context.cardColor,
-          border: Border.all(
-            color: isSelected ? color : context.dividerColor,
-            width: 1.5,
-          ),
-          borderRadius: radius(8),
+ Widget buildPropertyOption(String title, int id, IconData icon, Color color) {
+  bool isSelected = selectedProperty == title;
+
+  return GestureDetector(
+    onTap: () {
+      setState(() {
+        selectedProperty = title;
+        selectedPropertyId = id;
+        selectedServiceType = null;
+      });
+    },
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? color.withOpacity(0.1) : context.cardColor,
+        border: Border.all(
+          color: isSelected ? color : context.dividerColor,
+          width: 1.5,
         ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: color,
-              child: Icon(icon, color: Colors.white),
-            ),
-            SizedBox(width: 16),
-            Text(title,
-                style: boldTextStyle(
-                    size: 16, color: Theme.of(context).iconTheme.color)),
-          ],
-        ),
+        borderRadius: radius(8),
       ),
-    );
-  }
-
-  Widget buildStepOne() {
-    return Obx(() {
-      final propertyTypes = _constantsController.propertyTypes;
-      debugPrint("buildStepOne() -> ${propertyTypes.length} property types");
-
-      if (propertyTypes.isEmpty) {
-        return Center(child: CircularProgressIndicator());
-      }
-
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "What type of property valuation are you looking for?",
-              style: primaryTextStyle(
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: color,
+            child: Icon(icon, color: Colors.white),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              title,
+              style: boldTextStyle(
                 size: 16,
-                weight: FontWeight.w600,
                 color: Theme.of(context).iconTheme.color,
               ),
-            ),
-            SizedBox(height: 16),
-            ...propertyTypes.map((propertyType) {
-              final (icon, color) =
-                  PropertyTypeUtils.getIconAndColor(propertyType.name);
-              return buildPropertyOption(
-                propertyType.name,
-                propertyType.id,
-                icon,
-                color,
-              );
-            }).toList(),
-            SizedBox(height: 10),
-          ],
-        ),
-      );
-    });
-  }
-
-  Widget buildStepTwo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Enter the Location and Area of the Property",
-            style: primaryTextStyle(
-                size: 18,
-                weight: FontWeight.w600,
-                color: Theme.of(context).iconTheme.color)),
-        SizedBox(height: 16),
-        GestureDetector(
-          onTap: () {
-            _navigateToCitySelection();
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: context.cardColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.location_on, color: Theme.of(context).primaryColor),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    selectedCityName.isEmpty
-                        ? 'Tap to select location'
-                        : selectedCityName,
-                    style: TextStyle(
-                      color: selectedCityName.isEmpty
-                          ? Colors.grey
-                          : Theme.of(context).iconTheme.color,
-                    ),
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: Colors.grey),
-              ],
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis, // 👈 hides long text with "..."
             ),
           ),
-        ),
-        SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: AppTextField(
-                initialValue: area,
-                textStyle: TextStyle(color: Theme.of(context).iconTheme.color),
-                textFieldType: TextFieldType.NUMBER,
-                decoration: inputDecoration(context, labelText: 'Area'),
-                onChanged: (val) => area = val,
-              ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+ Widget buildStepOne() {
+  return Obx(() {
+    final propertyTypes = _constantsController.propertyTypes;
+    debugPrint("buildStepOne() -> ${propertyTypes.length} property types");
+
+    if (propertyTypes.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Get current language
+    final currentLang = Get.locale?.languageCode ?? 'en';
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "property_type_val".tr,
+            style: primaryTextStyle(
+              size: 16,
+              weight: FontWeight.w600,
+              color: Theme.of(context).iconTheme.color,
             ),
-            SizedBox(width: 16),
-            Expanded(
-              flex: 2,
-              child: DropdownButtonFormField<String>(
-                value: selectedUnit,
-                dropdownColor: context.cardColor,
-                decoration: inputDecoration(context, labelText: 'Unit'),
-                items: areaUnits.map((String unit) {
-                  return DropdownMenuItem<String>(
-                    value: unit,
-                    child: Text(unit,
-                        style: primaryTextStyle(
-                            color: Theme.of(context).iconTheme.color)),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() => selectedUnit = newValue!);
-                },
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 16),
-        DropdownButtonFormField<ServiceType>(
-          value: selectedServiceType,
-          dropdownColor: context.cardColor,
-          decoration: inputDecoration(context, labelText: 'Service Type'),
-          items: getServicesForPropertyType(selectedPropertyId).map((service) {
-            return DropdownMenuItem<ServiceType>(
-              value: service,
-              child: Text(service.serviceType,
-                  style: primaryTextStyle(
-                      color: Theme.of(context).iconTheme.color)),
+          ),
+          const SizedBox(height: 16),
+
+          // Loop through property types
+          ...propertyTypes.map((propertyType) {
+            final (icon, color) =
+                PropertyTypeUtils.getIconAndColor(propertyType.name);
+
+            // Use Arabic name if selected language is Arabic
+            final displayName = currentLang == 'ar'
+                ? propertyType.name_ar
+                : propertyType.name;
+
+            return buildPropertyOption(
+              displayName,
+              propertyType.id,
+              icon,
+              color,
             );
           }).toList(),
-          onChanged: (ServiceType? newValue) {
-            setState(() => selectedServiceType = newValue!);
-          },
-        ),
-        SizedBox(height: 16),
-        Row(
-          children: [
-            Text(
-              "Express Request (Faster)",
+
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  });
+}
+
+
+  Widget buildStepTwo() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("enter_location_area".tr,
               style: primaryTextStyle(
-                color: Theme.of(context).iconTheme.color,
+                  size: 18,
+                  weight: FontWeight.w600,
+                  color: Theme.of(context).iconTheme.color)),
+          SizedBox(height: 16),
+          GestureDetector(
+            onTap: () {
+              _navigateToCitySelection();
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: context.cardColor,
+                borderRadius: BorderRadius.circular(8),
               ),
-            ),
-            Spacer(),
-            Switch(
-              value: selectedRequestType?.id == 2,
-              onChanged: (value) {
-                setState(() {
-                  selectedRequestType = _constantsController.requestTypes
-                      .firstWhere((type) => type.id == (value ? 2 : 1));
-                });
-              },
-              activeColor: Theme.of(context).primaryColor,
-            ),
-          ],
-        ),
-        if (selectedRequestType != null)
-          Padding(
-            padding: EdgeInsets.only(top: 4),
-            child: Text(
-              selectedRequestType!.description,
-              style: secondaryTextStyle(
-                color: Colors.grey,
-                size: 12,
+              child: Row(
+                children: [
+                  Icon(Icons.location_on,
+                      color: Theme.of(context).primaryColor),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      selectedCityName.isEmpty
+                          ? 'tap_to_select_location'.tr
+                          : selectedCityName,
+                      style: TextStyle(
+                        color: selectedCityName.isEmpty
+                            ? Colors.grey
+                            : Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: Colors.grey),
+                ],
               ),
             ),
           ),
-      ],
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: AppTextField(
+                  initialValue: area,
+                  textStyle:
+                      TextStyle(color: Theme.of(context).iconTheme.color),
+                  textFieldType: TextFieldType.NUMBER,
+                  decoration: inputDecoration(context, labelText: 'area_label'.tr),
+                  onChanged: (val) => area = val,
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                flex: 2,
+                child: DropdownButtonFormField<String>(
+                  value: selectedUnit,
+                  dropdownColor: context.cardColor,
+                  decoration: inputDecoration(context, labelText: 'unit'.tr),
+                  items: areaUnits.map((String unit) {
+                    return DropdownMenuItem<String>(
+                      value: unit,
+                      child: Text(unit,
+                          style: primaryTextStyle(
+                              color: Theme.of(context).iconTheme.color)),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() => selectedUnit = newValue!);
+                  },
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          DropdownButtonFormField<ServiceType>(
+            value: selectedServiceType,
+            dropdownColor: context.cardColor,
+            decoration: inputDecoration(context, labelText: 'service_type_label'.tr),
+            items:
+                getServicesForPropertyType(selectedPropertyId).map((service) {
+              return DropdownMenuItem<ServiceType>(
+                value: service,
+                child: Text(service.serviceType,
+                    style: primaryTextStyle(
+                        color: Theme.of(context).iconTheme.color)),
+              );
+            }).toList(),
+            onChanged: (ServiceType? newValue) {
+              setState(() => selectedServiceType = newValue!);
+            },
+          ),
+          SizedBox(height: 16),
+          Row(
+            children: [
+              Text(
+                "express_request".tr,
+                style: primaryTextStyle(
+                  color: Theme.of(context).iconTheme.color,
+                ),
+              ),
+              Spacer(),
+              Switch(
+                value: selectedRequestType?.id == 2,
+                onChanged: (value) {
+                  setState(() {
+                    selectedRequestType = _constantsController.requestTypes
+                        .firstWhere((type) => type.id == (value ? 2 : 1));
+                  });
+                },
+                activeColor: Theme.of(context).primaryColor,
+              ),
+            ],
+          ),
+          if (selectedRequestType != null)
+            Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                selectedRequestType!.description,
+                style: secondaryTextStyle(
+                  color: Colors.grey,
+                  size: 12,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
   Widget buildStepThree() {
     if (widget.preSelected) {
-      return buildStepFour();
+      final requiredDocs = getRequiredDocuments();
+      final hasDocuments = requiredDocs.isNotEmpty;
+
+      if (showDocumentStep && hasDocuments) {
+        return buildStepFour();
+      } else {
+        return buildStepFive();
+      }
     }
     return companySelection();
   }
@@ -906,11 +1037,34 @@ class _PropertyFormState extends State<PropertyForm> {
   Widget buildStepFour() {
     final requiredDocs = getRequiredDocuments();
 
+    // If no documents required, show a message
+    if (requiredDocs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
+            SizedBox(height: 16),
+            Text(
+              "No documents required",
+              style: boldTextStyle(
+                  size: 18, color: Theme.of(context).iconTheme.color),
+            ),
+            SizedBox(height: 8),
+            Text(
+              "You can proceed to the next step",
+              style: secondaryTextStyle(),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Upload Required Documents",
+          Text("upload_required_documents".tr,
               style: primaryTextStyle(
                   size: 18,
                   weight: FontWeight.w600,
@@ -924,24 +1078,44 @@ class _PropertyFormState extends State<PropertyForm> {
                           style: primaryTextStyle(
                               color: Theme.of(context).iconTheme.color)),
                       SizedBox(height: 8),
-                      
+
                       // Show different UI based on isFile value
                       if (doc.isFile != 0) ...[
                         // File upload UI
-                        if (propertyDocuments.length > requiredDocs.indexOf(doc))
+                        if (propertyDocuments.length >
+                            requiredDocs.indexOf(doc))
                           Stack(
                             children: [
                               Container(
                                 height: 100,
                                 width: 100,
                                 decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: FileImage(File(propertyDocuments[
-                                            requiredDocs.indexOf(doc)]
-                                        .path)),
-                                    fit: BoxFit.cover,
-                                  ),
+                                  color: context.cardColor,
                                   borderRadius: radius(),
+                                  border:
+                                      Border.all(color: context.dividerColor),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      _getFileIcon(propertyDocuments[
+                                              requiredDocs.indexOf(doc)]
+                                          .extension),
+                                      size: 40,
+                                      color: context.primaryColor,
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      propertyDocuments[
+                                              requiredDocs.indexOf(doc)]
+                                          .name,
+                                      style: secondaryTextStyle(size: 10),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
                               ),
                               Positioned(
@@ -975,7 +1149,7 @@ class _PropertyFormState extends State<PropertyForm> {
                         ),
                       ] else ...[
                         // Text input UI
-                        if (documentTextValues.containsKey(doc.id) && 
+                        if (documentTextValues.containsKey(doc.id) &&
                             documentTextValues[doc.id]!.isNotEmpty)
                           Container(
                             padding: EdgeInsets.all(12),
@@ -987,7 +1161,8 @@ class _PropertyFormState extends State<PropertyForm> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                Icon(Icons.check_circle,
+                                    color: Colors.green, size: 20),
                                 SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -1014,9 +1189,9 @@ class _PropertyFormState extends State<PropertyForm> {
                                   borderRadius: radius(defaultRadius))),
                           icon: Icon(Icons.edit, color: Colors.white),
                           label: Text(
-                              documentTextValues.containsKey(doc.id) 
-                                  ? "Edit ${doc.documentName}"
-                                  : "Enter ${doc.documentName}",
+                              documentTextValues.containsKey(doc.id)
+                                  ? 'Edit ${doc.documentName}'
+                                  : 'Enter ${doc.documentName}',
                               style:
                                   boldTextStyle(size: 16, color: Colors.white)),
                         ),
@@ -1060,7 +1235,7 @@ class _PropertyFormState extends State<PropertyForm> {
                     "Price:",
                     selectedCompany != null && selectedPropertyId != null
                         ? _getPriceForCompany(
-                            selectedCompany!.id, area.toDouble())
+                            selectedCompany!.id, double.tryParse(area) ?? 0.0)
                         : "N/A"),
               ],
             ),
@@ -1068,7 +1243,8 @@ class _PropertyFormState extends State<PropertyForm> {
             if (showDocumentStep)
               _buildInfoCard(
                 children: [
-                  _buildInfoRow("Documents:", "${propertyDocuments.length + documentTextValues.length}"),
+                  _buildInfoRow("Documents:",
+                      "${propertyDocuments.length + documentTextValues.length}"),
                 ],
               ),
           ],
@@ -1113,9 +1289,12 @@ class _PropertyFormState extends State<PropertyForm> {
         final companyMatch = pricing.companyId == companyId;
         final propertyMatch = pricing.propertyTypeId == selectedPropertyId;
         final areaMatch = area >= pricing.areaFrom && area <= pricing.areaTo;
-        setState(() {
-          selectedServicePricing = pricing;
-        });
+
+        if (companyMatch && propertyMatch && areaMatch) {
+          setState(() {
+            selectedServicePricing = pricing;
+          });
+        }
 
         return companyMatch && propertyMatch && areaMatch;
       }).toList();
@@ -1124,7 +1303,7 @@ class _PropertyFormState extends State<PropertyForm> {
         return "N/A";
       }
 
-  return matchingPricings.first.price.replaceAll(".000", "");
+      return matchingPricings.first.price.replaceAll(".000", "");
     } catch (e) {
       return "N/A";
     }
@@ -1223,10 +1402,13 @@ class _PropertyFormState extends State<PropertyForm> {
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Welcome Back!",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text("welcome_back".tr,
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).iconTheme.color)),
             16.height,
-            Text("Login to your account to continue",
+            Text("login_to_continue".tr,
                 style: TextStyle(fontSize: 14, color: Colors.grey)),
             16.height,
             Row(
@@ -1238,7 +1420,7 @@ class _PropertyFormState extends State<PropertyForm> {
                       onPressed: () {
                         Get.toNamed(RouteName.loginView);
                       },
-                      child: Text("Login"),
+                      child: Text("login".tr),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
@@ -1256,6 +1438,10 @@ class _PropertyFormState extends State<PropertyForm> {
         ),
       );
     }
+
+    final requiredDocs = getRequiredDocuments();
+    final hasDocuments = requiredDocs.isNotEmpty;
+
     return Scaffold(
       backgroundColor: context.scaffoldBackgroundColor,
       body: SafeArea(
@@ -1273,12 +1459,13 @@ class _PropertyFormState extends State<PropertyForm> {
                     buildStepOne(),
                     buildStepTwo(),
                     buildStepThree(),
-                    if (widget.preSelected)
-                      buildStepFive()
-                    else if (showDocumentStep)
-                      buildStepFour(),
-                    if (!widget.preSelected) buildStepFive(),
-                  ].where((child) => child != null).toList(),
+                    if (widget.preSelected) ...[
+                      buildStepFive(),
+                    ] else ...[
+                      if (showDocumentStep && hasDocuments) buildStepFour(),
+                      buildStepFive(),
+                    ],
+                  ],
                 ),
               ),
               SizedBox(height: 10),
@@ -1294,7 +1481,7 @@ class _PropertyFormState extends State<PropertyForm> {
                           shape: RoundedRectangleBorder(
                               borderRadius: radius(defaultRadius)),
                         ),
-                        child: Text("BACK",
+                        child: Text("back".tr,
                             style: primaryTextStyle(
                                 size: 16,
                                 color: Theme.of(context).iconTheme.color)),
@@ -1333,7 +1520,7 @@ class _PropertyFormState extends State<PropertyForm> {
                                 ),
                               )
                             : Text(
-                                isLastStep ? "Pay Now" : "NEXT",
+                                isLastStep ? "pay_now".tr : "next".tr,
                                 style: boldTextStyle(
                                     size: 16, color: Colors.white),
                               ),

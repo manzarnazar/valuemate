@@ -45,5 +45,24 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- ✅ Local Network Permissions -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This app requires access to your local network to discover and connect with nearby devices.</string>
+
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_http._tcp</string>
+	</array>
+
+	<!-- ✅ Privacy Usage Descriptions -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to your photo library to select and upload images.</string>
+
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to your camera to take pictures or scan items.</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app requires microphone access for recording or communication features.</string>
 </dict>
 </plist>

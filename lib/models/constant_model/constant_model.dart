@@ -144,11 +144,13 @@ class Service {
   final int id;
   final int serviceTypeId;
   final String serviceType;
+  final String serviceTypeAr;
 
   Service({
     required this.id,
     required this.serviceTypeId,
     required this.serviceType,
+    required this.serviceTypeAr,
   });
 
   factory Service.fromJson(Map<String, dynamic> json) {
@@ -156,6 +158,7 @@ class Service {
       id: json['id'] ?? 0,
       serviceTypeId: json['service_type_id'] ?? 0,
       serviceType: json['service_type'] ?? '',
+      serviceTypeAr: json['service_type_ar'] ?? '',
     );
   }
 }
@@ -163,16 +166,19 @@ class Service {
 class ServiceType {
   final int serviceTypeId;
   final String serviceType;
+  final String service_type_ar;
 
   ServiceType({
     required this.serviceTypeId,
     required this.serviceType,
+    required this.service_type_ar,
   });
 
   factory ServiceType.fromJson(Map<String, dynamic> json) {
     return ServiceType(
       serviceTypeId: json['service_type_id'] ?? 0,
       serviceType: json['service_type'] ?? '',
+      service_type_ar: json['service_type_ar'] ?? '',
     );
   }
 
@@ -191,23 +197,27 @@ class Company {
   final int id;
   final String file;
   final String name;
+  final String name_ar;
   final String address;
   final String phone;
   final String email;
   final String website;
   final String status;
   final String description;
+  final String description_ar;
 
   Company({
     required this.id,
     required this.file,
     required this.name,
+    required this.name_ar,
     required this.address,
     required this.phone,
     required this.email,
     required this.website,
     required this.status,
     required this.description,
+    required this.description_ar,
   });
 
   factory Company.fromJson(Map<String, dynamic> json) {
@@ -215,12 +225,14 @@ class Company {
       id: json['id'] ?? 0,
       file: json['file'] ?? '',
       name: json['name'] ?? '',
+      name_ar: json['name_ar'] ?? '',
       address: json['address'] ?? '',
       phone: json['phone'] ?? '',
       email: json['email'] ?? '',
       website: json['website'] ?? '',
       status: json['status'] ?? '',
       description: json['description'] ?? '',
+      description_ar: json['description_ar'] ?? '',
     );
   }
 }
@@ -228,16 +240,19 @@ class Company {
 class Location {
   final int id;
   final String name;
+  final String name_ar;
 
   Location({
     required this.id,
     required this.name,
+    required this.name_ar,
   });
 
   factory Location.fromJson(Map<String, dynamic> json) {
     return Location(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
+      name_ar: json['name_ar'] ?? '',
     );
   }
 }
@@ -245,6 +260,8 @@ class Location {
 class PropertyType {
   final int id;
   final String name;
+  final String name_ar;
+  
   final String image_url;
   
 
@@ -252,6 +269,7 @@ class PropertyType {
   PropertyType({
     required this.id,
     required this.name,
+    required this.name_ar,
     required this.image_url,
   });
 
@@ -259,6 +277,7 @@ class PropertyType {
     return PropertyType(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
+      name_ar: json['name_ar'] ?? '',
       image_url: json['image_url'] ?? '',
     );
   }
@@ -390,16 +409,19 @@ class DocumentRequirement {
 class Status {
   final int id;
   final String name;
+  final String name_ar;
 
   Status({
     required this.id,
     required this.name,
+    required this.name_ar,
   });
 
   factory Status.fromJson(Map<String, dynamic> json) {
     return Status(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
+      name_ar: json['name_ar'] ?? '',
     );
   }
 }

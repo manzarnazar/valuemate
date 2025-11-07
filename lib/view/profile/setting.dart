@@ -17,19 +17,46 @@ class _SettingScreenState extends State<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return AppScaffold(
-        appBarTitle: 'App Settings',
+        appBarTitle: 'app_name'.tr,
         child: AnimatedScrollView(
             padding: EdgeInsets.symmetric(vertical: 8),
             listAnimationType: ListAnimationType.FadeIn,
             fadeInConfiguration:
                 FadeInConfiguration(duration: Duration(seconds: 2)),
             children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Text('language'.tr + ': ', style: Theme.of(context).textTheme.bodyLarge),
+                    const SizedBox(width: 16),
+                    DropdownButton<Locale>(
+                      value: Get.locale?.languageCode == 'ar'
+                          ? const Locale('ar', 'SA')
+                          : const Locale('en', 'US'),
+                      items: const [
+                        DropdownMenuItem(
+                          value: Locale('en', 'US'),
+                          child: Text('English'),
+                        ),
+                        DropdownMenuItem(
+                          value: Locale('ar', 'SA'),
+                          child: Text('العربية'),
+                        ),
+                      ],
+                      onChanged: (locale) {
+                        if (locale != null) {
+                          Get.updateLocale(locale);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
               Obx(() => SettingItemWidget(
                 leading: Icon(Icons.delete, color: Colors.red),
-                title: "Delete Account",
+                title: "delete_account".tr,
                 trailing: authController.isDeleteLoading.value
                     ? SizedBox(
                         width: 20,
@@ -50,16 +77,16 @@ class _SettingScreenState extends State<SettingScreen> {
                         final confirm = await showDialog<bool>(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text('Confirm Delete'),
+                            title: Text('confirm_delete'.tr),
                             content: Text(
-                                'Are you sure you want to delete your account? This action cannot be undone.'),
+                                'confirm_delete_content'.tr),
                             actions: [
                               TextButton(
-                                child: Text('Cancel'),
+                                child: Text('cancel'.tr),
                                 onPressed: () => Navigator.of(context).pop(false),
                               ),
                               TextButton(
-                                child: Text('Delete',
+                                child: Text('delete'.tr,
                                     style: TextStyle(color: Colors.red)),
                                 onPressed: () => Navigator.of(context).pop(true),
                               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:valuemate/models/constant_model/constant_model.dart';
 // import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -17,7 +18,10 @@ class ServiceComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
- 
+    final currentLang = Get.locale?.languageCode ?? 'en';
+
+     final displayName =
+        currentLang == 'ar' ? serviceData.name_ar ?? '' : serviceData.name ?? '';
 
     return Container(
       decoration: BoxDecoration(
@@ -25,7 +29,7 @@ class ServiceComponent extends StatelessWidget {
         color: context.cardColor,
         boxShadow: [
           BoxShadow(
-            color: context.theme.dividerColor.withOpacity(0.1),
+            color: Theme.of(context).dividerColor.withOpacity(0.1),
             blurRadius: 5,
             offset: Offset(0, 2),
           ),
@@ -45,7 +49,7 @@ class ServiceComponent extends StatelessWidget {
                 Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                    color: context.theme.highlightColor,
+                    color: Theme.of(context).highlightColor,
                     image: DecorationImage(
                       image: NetworkImage(serviceData.file ?? 'https://via.placeholder.com/300x200'),
                       fit: BoxFit.cover,
@@ -60,14 +64,14 @@ class ServiceComponent extends StatelessWidget {
                 //   child: Container(
                 //     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 //     decoration: BoxDecoration(
-                //       color: context.theme.primaryColor,
+                //       color: Theme.of(context).primaryColor,
                 //       borderRadius: BorderRadius.circular(24),
-                //       border: Border.all(color: context.theme.cardColor, width: 2),
+                //       border: Border.all(color: Theme.of(context).cardColor, width: 2),
                 //     ),
                 //     child: Text(
                 //       '\$${serviceData.}',
                 //       style: TextStyle(
-                //         color: context.theme.textTheme.bodySmall?.color,
+                //         color: Theme.of(context).textTheme.bodySmall?.color,
                 //         fontSize: 14,
                 //         fontWeight: FontWeight.bold,
                 //       ),
@@ -85,8 +89,8 @@ class ServiceComponent extends StatelessWidget {
                 Marquee(
                   directionMarguee: DirectionMarguee.oneDirection,
                   child: Text(
-                    serviceData.name, 
-                    style: boldTextStyle(color: context.iconColor),
+                    displayName, 
+                    style: boldTextStyle(color: Theme.of( context).iconTheme.color),
                   )
                 ),
             

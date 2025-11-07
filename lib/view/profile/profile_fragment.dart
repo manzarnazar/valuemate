@@ -61,16 +61,16 @@ class _ProfileFragmentState extends State<ProfileFragment> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: const Text(
-            'Are you sure you want to delete your account? This action cannot be undone.'),
+        title: Text('confirm_delete'.tr),
+        content: Text(
+            'are_you_sure_delete'.tr),
         actions: [
           TextButton(
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr),
             onPressed: () => Navigator.of(context).pop(false),
           ),
           TextButton(
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text('delete'.tr, style: TextStyle(color: Colors.red)),
             onPressed: () => Navigator.of(context).pop(true),
           ),
         ],
@@ -86,7 +86,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: appBarWidget(
-        "Profile",
+        "profile".tr,
         textColor: white,
         textSize: 18,
         elevation: 0.0,
@@ -96,6 +96,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            
             if (isLoggedIn) _buildUserProfileSection(),
             _buildAboutAppSection(),
             if (isLoggedIn) _buildDangerZoneSection(),
@@ -118,7 +119,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
     } catch (e) {
       print('Error launching dialer: $e');
       Fluttertoast.showToast(
-        msg: "Could not launch dialer",
+        msg: "could_not_launch_dialer".tr,
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
       );
@@ -163,7 +164,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
                             border: Border.all(color: Colors.white, width: 2),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Text('Edit',
+                          child: Text('edit'.tr,
                               style:
                                   TextStyle(color: Colors.white, fontSize: 12)),
                         ),
@@ -204,28 +205,28 @@ class _ProfileFragmentState extends State<ProfileFragment> {
         children: [
           _buildListTile(
             icon: Icons.privacy_tip,
-            title: 'Privacy Policy',
+            title: 'privacy_policy'.tr,
             onTap: () {
               Get.to(() => LegalPageView(isTerms: false));
             },
           ),
           _buildListTile(
             icon: Icons.description,
-            title: 'Terms & Conditions',
+            title: 'terms_conditions'.tr,
             onTap: () {
               Get.to(() => LegalPageView(isTerms: true));
             },
           ),
           _buildListTile(
             icon: Icons.support,
-            title: 'Support Chat',
+            title: 'support_chat'.tr,
             onTap: () {
-              Get.snackbar("Support Chat", "We are working on it.....");
+              Get.snackbar("support_chat".tr, "support_chat_working".tr);
             },
           ),
           _buildListTile(
             icon: Icons.phone,
-            title: 'Helpline Number',
+            title: 'helpline_number'.tr,
             onTap: () async {
               try {
                 final helplineSetting = _constantController.settings.firstWhere(
@@ -235,7 +236,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
                 await _launchDialer(helplineNumber);
               } catch (e) {
                 Fluttertoast.showToast(
-                  msg: "Could not find helpline number",
+                  msg: "no_helpline".tr,
                   toastLength: Toast.LENGTH_SHORT,
                   gravity: ToastGravity.BOTTOM,
                 );
@@ -244,7 +245,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
           ),
           _buildListTile(
             icon: Icons.dark_mode,
-            title: 'Theme',
+            title: 'theme'.tr,
             onTap: () async {
               await showInDialog(
                 context,
@@ -253,12 +254,46 @@ class _ProfileFragmentState extends State<ProfileFragment> {
               );
             },
           ),
+          _buildListTile(
+            icon: Icons.language,
+            title: 'language'.tr,
+            onTap: () async {
+              final selected = await showDialog<Locale>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('select_language'.tr, style: TextStyle(color: Theme.of(context).iconTheme.color),),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        title: Text('english'.tr),
+                        trailing: Get.locale?.languageCode == 'en'
+                            ? const Icon(Icons.check, color: Colors.blue) : null,
+                        onTap: () => Navigator.of(context).pop(const Locale('en', 'US')),
+                      ),
+                      ListTile(
+                        title: Text('arabic'.tr),
+                        trailing: Get.locale?.languageCode == 'ar'
+                            ? const Icon(Icons.check, color: Colors.blue) : null,
+                        onTap: () => Navigator.of(context).pop(const Locale('ar', 'SA')),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              if (selected != null) {
+                Get.updateLocale(selected);
+                await setValue('locale','${selected.languageCode}_${selected.countryCode}');
+              }
+            },
+          ),
           if (isLoggedIn)
             Obx(() => ListTile(
                   leading:
                       const Icon(Icons.delete, color: Colors.red, size: 20),
                   title: Text(
-                    'Delete Account',
+                    'dlt_account'.tr,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                           color: Colors.red,
                           fontWeight: FontWeight.bold,
@@ -303,7 +338,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
                           authController.logout();
                         },
                         child: Text(
-                          'Logout',
+                          'logout'.tr,
                           style: TextStyle(
                             color: context.primaryColor,
                             fontWeight: FontWeight.bold,
@@ -325,7 +360,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: _buildListTile(
         icon: Icons.login,
-        title: 'Sign In',
+        title: 'sign_in'.tr,
         onTap: () {
           Get.toNamed(RouteName.loginView);
         },
@@ -338,7 +373,7 @@ class _ProfileFragmentState extends State<ProfileFragment> {
       padding: const EdgeInsets.all(16),
       child: Center(
         child: TextButton(
-          child: const Text('v1.0.0', style: TextStyle(color: Colors.grey)),
+          child: Text('v1.0.0'.tr, style: TextStyle(color: Colors.grey)),
           onPressed: () {
             showAboutDialog(
               context: context,

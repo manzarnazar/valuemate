@@ -129,7 +129,7 @@ class _DashboardFragmentState extends State<DashboardFragment> {
               children: [
                 CustomSliderWithLocation(
                   imageUrls: urls(),
-                  currentLocation: selectedCityName ?? 'Select Location',
+                  currentLocation: selectedCityName ?? 'select_location'.tr,
                   onLocationTap: () {
                     _navigateToCitySelection();
                   },
@@ -152,7 +152,7 @@ class _DashboardFragmentState extends State<DashboardFragment> {
                 // 20.height,
                 Row(
                   children: [
-                    Text("Companies",
+                    Text('companies'.tr,
                         style: boldTextStyle(
                           size: 14,
                           color: Theme.of(context).iconTheme?.color,

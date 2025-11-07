@@ -39,9 +39,11 @@ class _BookingFragmentState extends State<BookingFragment> {
 
   @override
   Widget build(BuildContext context) {
+        final currentLang = Get.locale?.languageCode ?? 'en';
+
     return Scaffold(
       appBar: appBarWidget(
-        "Bookings",
+        "bookings".tr,
         textColor: white,
         showBack: false,
         textSize: 18,
@@ -57,15 +59,15 @@ class _BookingFragmentState extends State<BookingFragment> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Welcome Back!",
+                        Text("welcome_back".tr,
                             style: TextStyle(
-                                fontSize: 24, fontWeight: FontWeight.bold)),
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).iconTheme.color)),
                         16.height,
-                        Text("Login to your account to continue",
+                        Text("login_to_continue".tr,
                             style: TextStyle(fontSize: 14, color: Colors.grey)),
-                        // Add the dummy data button here
                         16.height,
-
                         Row(
                           children: [
                             Expanded(
@@ -76,7 +78,7 @@ class _BookingFragmentState extends State<BookingFragment> {
                                   onPressed: () {
                                     Get.toNamed(RouteName.loginView);
                                   },
-                                  child: Text("Login"),
+                                  child: Text("login".tr),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor:
                                         Theme.of(context).primaryColor,
@@ -104,13 +106,11 @@ class _BookingFragmentState extends State<BookingFragment> {
                     }
 
                     if (_history.requests.isEmpty) {
-                      return const Center(
-                          child: Text('No bookings available.'));
+                      return Center(child: Text('no_bookings_available'.tr,style: TextStyle(color: Theme.of(context).iconTheme.color),));
                     }
 
                     return Column(
                       children: [
-
                         Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 10),
@@ -130,7 +130,7 @@ class _BookingFragmentState extends State<BookingFragment> {
                                       shrinkWrap: true,
                                       children: [
                                         ListTile(
-                                          title: Text("All Statuses",
+                                          title: Text("all_statuses".tr,
                                               style: TextStyle(
                                                   color: Colors.white)),
                                           onTap: () =>
@@ -138,7 +138,7 @@ class _BookingFragmentState extends State<BookingFragment> {
                                         ),
                                         ..._constants.statuses
                                             .map((status) => ListTile(
-                                                  title: Text(status.name,
+                                                  title: Text(currentLang == "en" ? status.name : status.name_ar,
                                                       style: TextStyle(
                                                           color: Colors.white)),
                                                   onTap: () => Navigator.pop(
@@ -167,7 +167,7 @@ class _BookingFragmentState extends State<BookingFragment> {
                                   children: [
                                     Text(
                                       _history.selectedStatusId.value == 0
-                                          ? "All Statuses"
+                                          ? "all_statuses".tr
                                           : _constants.statuses
                                               .firstWhere((s) =>
                                                   s.id ==

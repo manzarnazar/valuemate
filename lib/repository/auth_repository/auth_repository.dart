@@ -19,17 +19,20 @@ class AuthRepository {
     }
   }
 
-  Future<AuthResponseModel> register(RegisterRequestModel request) async {
-    try {
-      dynamic response = await _apiServices.postApi(
-        request.toJson(),
-        "https://valuma8.com/api/register",
-      );
-      return AuthResponseModel.fromJson(response);
-    } catch (e) {
-      rethrow;
-    }
+ Future<AuthResponseModel> register(RegisterRequestModel request) async {
+  try {
+    dynamic response = await _apiServices.postApi(
+      request.toJson(),
+      "https://valuma8.com/api/register",
+    );
+    print("Raw response: $response"); // 👈 Add this
+    return AuthResponseModel.fromJson(response);
+  } catch (e) {
+    print("Error in register: $e"); // 👈 Add this too
+    rethrow;
   }
+}
+
 
   Future<AuthResponseModel> logout(String token) async {
     try {

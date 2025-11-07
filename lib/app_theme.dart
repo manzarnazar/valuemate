@@ -45,7 +45,12 @@ class AppTheme {
         backgroundColor: primaryColor,
         iconTheme: IconThemeData(color: Colors.white),
         titleTextStyle: secondaryTextStyle(size: 22,color: white),
-        systemOverlayStyle: SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light)),
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark, // Android: dark icons on light bg
+          statusBarBrightness: Brightness.light,    // iOS: status bar text/icons dark
+          systemNavigationBarIconBrightness: Brightness.dark,
+        )),
     dialogTheme: DialogTheme(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
@@ -70,7 +75,12 @@ class AppTheme {
       backgroundColor: primaryColor,
       iconTheme: IconThemeData(color: Colors.white),
       titleTextStyle: secondaryTextStyle(size: 22,color: white),
-      systemOverlayStyle: SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light),
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // Android: light icons on dark bg
+        statusBarBrightness: Brightness.dark,      // iOS: status bar text/icons light
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
     ),
     scaffoldBackgroundColor: scaffoldColorDark,
     fontFamily: GoogleFonts.inter().fontFamily,

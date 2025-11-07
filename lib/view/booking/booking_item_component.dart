@@ -70,7 +70,7 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "Select Payment Method",
+                  "select_payment_method".tr,
                   style: boldTextStyle(
                       size: 20, color: Theme.of(context).iconTheme.color),
                 ),
@@ -80,7 +80,7 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
                     return Padding(
                       padding: EdgeInsets.all(16),
                       child: Text(
-                        "No payment methods available",
+                        "no_payment_methods".tr,
                         style: secondaryTextStyle(),
                       ),
                     );
@@ -138,8 +138,7 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
                             if (selectedPaymentMethodId == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                    content:
-                                        Text('Please select a payment method')),
+                                    content: Text('please_select_payment'.tr)),
                               );
                               return;
                             }
@@ -147,8 +146,7 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
                             if (user == null || token == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                    content:
-                                        Text('Some required data is missing')),
+                                    content: Text('some_required_missing'.tr)),
                               );
                               return;
                             }
@@ -156,9 +154,6 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
                             if (selectedPaymentMethodId == 1) {
                               try {
                                 _requestController.isLoading.value = true;
-                                final valuationRequestId =
-                                    _requestController.request_id.value;
-
                                 final paymentResponse =
                                     await _requestController.initiatePayment(
                                   valuationRequestId: widget.booking.id,
@@ -186,7 +181,8 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
                                     SnackBar(
                                         content: Text(
                                             paymentResponse['message'] ??
-                                                'Payment initiation failed')),
+                                                'payment_initiation_failed'
+                                                    .tr)),
                                   );
                                 }
                               } catch (e) {
@@ -197,9 +193,9 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
                               } finally {
                                 _requestController.isLoading.value = false;
                               }
-                            }
-                            else if(selectedPaymentMethodId != 1) {
-                              Get.snackbar("COMING SOON", "Work in Progress");
+                            } else if (selectedPaymentMethodId != 1) {
+                              Get.snackbar(
+                                  'coming_soon'.tr, 'work_in_progress'.tr);
                               Navigator.pop(context);
                             }
                           },
@@ -211,7 +207,7 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
                             ),
                           ),
                           child: Text(
-                            "Proceed to Payment",
+                            "proceed_to_payment".tr,
                             style: boldTextStyle(color: Colors.white),
                           ),
                         );
@@ -226,36 +222,38 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
   }
 
   void _showBookingDetailsDialog(BuildContext context) {
+    
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text("Booking Details"),
+        title: Text("booking_details".tr),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _dialogRow("Company", widget.booking.companyName),
-              _dialogRow("User", widget.booking.userName),
-              _dialogRow("Property Type", widget.booking.propertyType),
-              _dialogRow("Service Type", widget.booking.serviceType),
-              _dialogRow("Request Type", widget.booking.requestType),
-              _dialogRow("Location", widget.booking.location),
-              _dialogRow("Pricing", widget.booking.servicePricing),
-              _dialogRow("Area", widget.booking.area),
+              _dialogRow("company_label".tr, widget.booking.companyName),
+              _dialogRow("user_label".tr, widget.booking.userName),
+              _dialogRow("property_type_label".tr, widget.booking.propertyType),
               _dialogRow(
-                  "Amount", "${widget.booking.totalAmount} ${currency.value}"),
-              _dialogRow("Status", widget.booking.status),
-              _dialogRow("Reference", widget.booking.reference),
-              _dialogRow("Date", widget.booking.createdAtDate),
-              _dialogRow("Time", widget.booking.createdAtTime),
-              _dialogRow("Payment", widget.booking.paymentStatus),
+                  "service_type_label_label".tr, widget.booking.serviceType),
+              _dialogRow("request_type_label".tr, widget.booking.requestType),
+              _dialogRow("location_label".tr, widget.booking.location),
+              _dialogRow("pricing_label".tr, widget.booking.servicePricing),
+              _dialogRow("area_label_label".tr, widget.booking.area),
+              _dialogRow("amount_label".tr,
+                  "${widget.booking.totalAmount} ${currency.value}"),
+              _dialogRow("status_label".tr, widget.booking.status),
+              _dialogRow("reference_label".tr, widget.booking.reference),
+              _dialogRow("date_label".tr, widget.booking.createdAtDate),
+              _dialogRow("time_label".tr, widget.booking.createdAtTime),
+              _dialogRow("payment_label".tr, widget.booking.paymentStatus),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Close"),
+            child: Text("close".tr),
           ),
           if (widget.booking.status_id == 1 || widget.booking.status_id == 2)
             ElevatedButton(
@@ -277,7 +275,7 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
                   // fontWeight: FontWeight.w600,
                 ),
               ),
-              child: const Text("Pay Now"),
+              child: Text("pay_now".tr),
             ),
         ],
       ),
@@ -406,13 +404,14 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _rowItem('Address:', widget.booking.location, context),
                 _rowItem(
-                    'Date & Time:',
+                    '${'address_label'.tr}:', widget.booking.location, context),
+                _rowItem(
+                    '${'date_time_label'.tr}:',
                     '${widget.booking.createdAtDate} at ${widget.booking.createdAtTime}',
                     context),
-                _rowItem(
-                    'Payment Status:', widget.booking.paymentStatus, context),
+                _rowItem('${'payment_status_label'.tr}:',
+                    widget.booking.paymentStatus, context),
                 Padding(
                   padding: const EdgeInsets.only(left: 8.0),
                   child: OutlinedButton(
@@ -435,8 +434,8 @@ class _BookingItemComponentState extends State<BookingItemComponent> {
                     child: Text(
                       (widget.booking.status_id == 1 ||
                               widget.booking.status_id == 2)
-                          ? "View & Pay Now"
-                          : "View",
+                          ? 'view_pay_now'.tr
+                          : 'view'.tr,
                     ),
                   ),
                 ),
