@@ -11,20 +11,17 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  SplashServices _splashServices = SplashServices();
+  final SplashServices _splashServices = SplashServices();
   final ConstantsController _constantsController =
       Get.put(ConstantsController(), permanent: true);
 
   @override
   void initState() {
     super.initState();
-
-    _initializeApp(); 
+    _initializeApp();
   }
 
   Future<void> _initializeApp() async {
-    await _splashServices.checkFirstTime();
-
     final routeName = await _splashServices.checkFirstTime();
     await _constantsController.fetchConstants();
     Get.offAllNamed(routeName);
@@ -33,7 +30,17 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Color(0xFF560574),
-        body: Center(child: Image.asset("assets/images/splash_screen.jpeg")));
+      backgroundColor: const Color(0xFF1A1A1A),
+      body: Padding(
+        padding: const EdgeInsets.all(60.0),
+        child: Center(
+          child: Image.asset(
+            "assets/images/logo.png",
+         
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    );
   }
 }
