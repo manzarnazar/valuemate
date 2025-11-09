@@ -19,7 +19,15 @@ platform :ios do
       keychain_password: ENV['MATCH_KEYCHAIN_PASSWORD'] || ""
     )
 
-    # Build the app
+    # Update code signing settings
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Runner.xcodeproj",
+      code_sign_identity: "iPhone Distribution",
+      profile_name: "match AppStore com.valuema8"
+    )
+
+    # Build and archive the app
     build_app(
       workspace: "Runner.xcworkspace",
       scheme: "Runner",
@@ -31,7 +39,8 @@ platform :ios do
           "com.valuema8" => "match AppStore com.valuema8"
         }
       },
-      clean: true
+      skip_profile_detection: true,
+      clean: false  # Don't clean since Flutter already built
     )
   end
 
