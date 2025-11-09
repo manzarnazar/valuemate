@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:valuemate/components/base_scaffold_widget.dart';
+import 'package:valuemate/res/routes/routes_name.dart';
 import 'package:valuemate/view_models/services/contorller/auth/auth_view_model.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -54,6 +55,38 @@ class _SettingScreenState extends State<SettingScreen> {
                   ],
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Material(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      Get.toNamed(RouteName.supportChat);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          Icon(Icons.chat_bubble_outline,
+                              color: Theme.of(context).iconTheme.color),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'support_chat'.tr,
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ),
+                          Icon(Icons.chevron_right,
+                              color: Theme.of(context).iconTheme.color),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
               Obx(() => SettingItemWidget(
                 leading: Icon(Icons.delete, color: Colors.red),
                 title: "delete_account".tr,

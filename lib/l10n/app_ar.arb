@@ -10,7 +10,7 @@
   "privacy_policy": "سياسة الخصوصية",
   "terms_conditions": "الشروط والأحكام",
   "support_chat": "دعم المحادثة",
-  "support_chat_working": "نعمل على ذلك.....",
+  "support_chat_working": "لا توجد رسائل بعد. ابدأ الدردشة مع الدعم.",
   "helpline_number": "رقم الخط الساخن",
   "theme": "السمة",
   "no_helpline": "تعذر العثور على رقم الخط الساخن",
@@ -42,7 +42,6 @@
   "proceed_company": "متابعة",
   "welcome_back": "مرحبًا بعودتك!",
   "login_to_continue": "قم بتسجيل الدخول للمتابعة",
-  "login": "تسجيل الدخول",
   "tap_to_select_location": "انقر لاختيار الموقع",
   "area_label": "المساحة",
   "unit": "الوحدة",
@@ -65,7 +64,9 @@
   "dlt_account": "حذف الحساب",
   "step_of_total": "{current} من {total}",
   "request": "طلب",
-  "companies": "الشركات",
   "bookings": "الحجوزات",
-  "menu": "القائمة"
+  "menu": "القائمة",
+  "type_message_hint": "اكتب رسالة...",
+  "chat_send_failed": "فشل في إرسال الرسالة",
+  "please_login_first": "يرجى تسجيل الدخول لاستخدام هذه الميزة"
 }

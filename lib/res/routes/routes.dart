@@ -5,6 +5,7 @@ import 'package:valuemate/view/auth/login.dart';
 import 'package:valuemate/view/booking/property_form_screen.dart';
 import 'package:valuemate/view/dashboard/dashboard_screen.dart';
 import 'package:valuemate/view/profile/setting.dart';
+import 'package:valuemate/view/profile/support_chat.dart';
 import 'package:valuemate/view/splash.dart';
 import 'package:valuemate/view/walk_through/walk_through.dart';
 
@@ -28,21 +29,24 @@ class AppRoutes {
           transitionDuration: Duration(milliseconds: 250),
           transition: Transition.downToUp,
         ),
-       
         GetPage(
           name: RouteName.edit_profile,
           page: () => EditProfilePage(),
           transitionDuration: Duration(milliseconds: 250),
           transition: Transition.downToUp,
         ),
-       
         GetPage(
           name: RouteName.settings,
           page: () => SettingScreen(),
           transitionDuration: Duration(milliseconds: 250),
           transition: Transition.downToUp,
         ),
-       
+        GetPage(
+          name: RouteName.supportChat,
+          page: () => const SupportChatScreen(),
+          transitionDuration: Duration(milliseconds: 250),
+          transition: Transition.downToUp,
+        ),
         GetPage(
           name: RouteName.dashboard,
           page: () {
@@ -50,16 +54,14 @@ class AppRoutes {
             final index = args['index'] ?? 0;
             return DashboardScreen(initialIndex: index);
           },
-           transitionDuration: Duration(milliseconds: 250),
+          transitionDuration: Duration(milliseconds: 250),
           transition: Transition.downToUp,
         ),
-
         GetPage(
           name: RouteName.form,
           page: () => PropertyForm(),
           transitionDuration: Duration(milliseconds: 250),
           transition: Transition.downToUp,
         ),
-       
       ];
 }

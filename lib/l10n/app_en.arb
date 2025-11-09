@@ -10,7 +10,7 @@
   "privacy_policy": "Privacy Policy",
   "terms_conditions": "Terms & Conditions",
   "support_chat": "Support Chat",
-  "support_chat_working": "We are working on it.....",
+  "support_chat_working": "No messages yet. Start chatting with support.",
   "helpline_number": "Helpline Number",
   "theme": "Theme",
   "no_helpline": "Could not find helpline number",
@@ -42,7 +42,6 @@
   "proceed_company": "PROCEED",
   "welcome_back": "Welcome Back!",
   "login_to_continue": "Login to your account to continue",
-  "login": "Login",
   "tap_to_select_location": "Tap to select location",
   "area_label": "Area",
   "unit": "Unit",
@@ -65,7 +64,9 @@
   "dlt_account": "Delete Account",
   "step_of_total": "{current} of {total}",
   "request": "Request",
-  "companies": "Companies",
   "bookings": "Bookings",
-  "menu": "Menu"
+  "menu": "Menu",
+  "type_message_hint": "Type a message...",
+  "chat_send_failed": "Failed to send message",
+  "please_login_first": "Please log in to use this feature"
 }

@@ -165,7 +165,7 @@ Future<void> updateProfile(String firstName, String lastName, String email) asyn
       if (token == null || token.isEmpty) {
         throw Exception('No authentication token found');
       }
-      if (user == null || user.id == null) {
+      if (user == null) {
         throw Exception('No user found');
       }
       isDeleteLoading.value =true;

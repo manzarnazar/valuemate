@@ -221,7 +221,15 @@ class _ProfileFragmentState extends State<ProfileFragment> {
             icon: Icons.support,
             title: 'support_chat'.tr,
             onTap: () {
-              Get.snackbar("support_chat".tr, "support_chat_working".tr);
+              if (isLoggedIn) {
+                Get.toNamed(RouteName.supportChat);
+              } else {
+                Fluttertoast.showToast(
+                  msg: 'please_login_first'.tr,
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                );
+              }
             },
           ),
           _buildListTile(

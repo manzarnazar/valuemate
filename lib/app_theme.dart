@@ -32,7 +32,6 @@ class AppTheme {
           bodySmall: TextStyle(color: white),
         )
     ),
-    dialogBackgroundColor: Colors.white,
     unselectedWidgetColor: Colors.black,
     dividerColor: borderColor,
     bottomSheetTheme: BottomSheetThemeData(
@@ -51,7 +50,7 @@ class AppTheme {
           statusBarBrightness: Brightness.light,    // iOS: status bar text/icons dark
           systemNavigationBarIconBrightness: Brightness.dark,
         )),
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
       shape: dialogShape(),
@@ -102,7 +101,6 @@ class AppTheme {
 
         )
     ),
-    dialogBackgroundColor: scaffoldSecondaryDark,
     unselectedWidgetColor: Colors.white60,
     bottomSheetTheme: BottomSheetThemeData(
       shape: RoundedRectangleBorder(borderRadius: radiusOnly(topLeft: defaultRadius, topRight: defaultRadius)),
@@ -111,7 +109,7 @@ class AppTheme {
     dividerColor: dividerDarkColor,
     floatingActionButtonTheme: FloatingActionButtonThemeData(backgroundColor: color ?? primaryColor),
     cardColor: scaffoldSecondaryDark,
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: scaffoldSecondaryDark,
       surfaceTintColor: Colors.transparent,
       shape: dialogShape(),

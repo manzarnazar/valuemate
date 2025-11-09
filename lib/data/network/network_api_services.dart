@@ -17,16 +17,48 @@ class NetworkApiServices extends BaseApiServices {
 
     dynamic responseJson;
     try {
-      final response =
-          await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url));
       responseJson = returnResponse(response);
-    
-    print(responseJson);
-    return responseJson;
-    }catch(e){
-      Get.snackbar("Error", e.toString());
+
+      if (kDebugMode) {
+        print(responseJson);
+      }
+      return responseJson;
+    } catch (e) {
+      if (kDebugMode) {
+        Get.snackbar("Error", e.toString());
+      }
+      rethrow;
     }
-      
+  }
+
+  @override
+  Future<dynamic> getApiWithToken(String url, String token) async {
+    if (kDebugMode) {
+      print(url);
+    }
+
+    dynamic responseJson;
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+      responseJson = returnResponse(response);
+
+      if (kDebugMode) {
+        print(responseJson);
+      }
+      return responseJson;
+    } catch (e) {
+      if (kDebugMode) {
+        Get.snackbar("Error", e.toString());
+      }
+      rethrow;
+    }
   }
 
   @override
@@ -70,6 +102,7 @@ Future<dynamic> postApi(var data, String url) async {
     }
   }
 
+  @override
   Future<dynamic> postApiWithToken(var data, String url, String token) async {
     if (kDebugMode) {
       print(url);
@@ -87,16 +120,18 @@ Future<dynamic> postApi(var data, String url) async {
         },
       );
 
-      print("check ${response.body}");
+      if (kDebugMode) {
+        print("check ${response.body}");
+      }
       responseJson = returnResponse(response);
       return responseJson;
-    } on SocketException {
-      throw InternetException('No internet connection');
     } on http.ClientException catch (e) {
-      if (e != null || e.message.contains('SocketException')) {
+      if (e.message.contains('SocketException')) {
         throw InternetException('');
       }
       throw FetchDataException('Client error: ${e.message}');
+    } catch (e) {
+      throw FetchDataException('Unexpected error: $e');
     }
   }
 }
