@@ -60,8 +60,9 @@ jobs:
           ruby-version: '3.0'
 
       - name: Install Fastlane via Bundler
-        working-directory: ios
-        run: bundle install
+        run: |
+          cd ios
+          bundle install
 
       - name: Set up provisioning profiles and certificates
         working-directory: ios
