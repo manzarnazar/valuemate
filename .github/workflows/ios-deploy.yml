@@ -45,7 +45,9 @@ jobs:
           flutter doctor -v
 
       - name: Build Flutter iOS (no codesign)
-        run: flutter build ios --release --no-codesign
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: flutter build ios --release --no-codesign --build-number $BUILD_NUMBER
 
       - name: Install CocoaPods dependencies
         run: |
