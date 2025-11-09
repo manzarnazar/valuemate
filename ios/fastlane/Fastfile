@@ -15,6 +15,8 @@ platform :ios do
       app_identifier: "com.valuema8",
       git_url: ENV['MATCH_GIT_URL'],
       git_basic_authorization: ENV['MATCH_GIT_BASIC_AUTHORIZATION'],
+      git_branch: "main",
+      clone_branch_directly: true,
       keychain_name: ENV['MATCH_KEYCHAIN_NAME'] || "fastlane_tmp_keychain",
       keychain_password: ENV['MATCH_KEYCHAIN_PASSWORD'] || ""
     )
