@@ -13,10 +13,8 @@ platform :ios do
       type: "appstore",
       readonly: is_ci,
       app_identifier: "com.valuema8",
-      # In CI, create/use a temporary keychain to avoid interactive prompts
-      create_keychain: !!ENV['CI'],
-      keychain_name: ENV['MATCH_KEYCHAIN_NAME'] || "fastlane_ci.keychain",
-      keychain_password: ENV['MATCH_KEYCHAIN_PASSWORD']
+      keychain_name: ENV['MATCH_KEYCHAIN_NAME'] || "fastlane_tmp_keychain",
+      keychain_password: ENV['MATCH_KEYCHAIN_PASSWORD'] || ""
     )
 
     # Build the app
