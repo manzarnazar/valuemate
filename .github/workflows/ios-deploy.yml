@@ -59,12 +59,11 @@ jobs:
         with:
           ruby-version: '3.0'
           bundler-cache: true
+          working-directory: ios
 
-      - name: Install Fastlane and CocoaPods
+      - name: Install Fastlane via Bundler
         working-directory: ios
-        run: |
-          gem install fastlane
-          bundle install
+        run: bundle install
 
       - name: Set up provisioning profiles and certificates
         working-directory: ios
