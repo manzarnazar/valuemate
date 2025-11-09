@@ -2,7 +2,7 @@ name: valuemate
 description: "A new Flutter project."
 
 
-version: 3.0.6+6
+version: 3.0.7+7
 
 environment:
   sdk: ^3.6.2
