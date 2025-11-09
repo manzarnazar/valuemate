@@ -1,0 +1,10 @@
+# Appfile for Valuemate
+
+app_identifier("com.valuema8") # The bundle identifier of your app
+apple_id(ENV["FASTLANE_USER"]) # Your Apple Developer Portal email address
+
+itc_team_id(ENV["ITC_TEAM_ID"]) # App Store Connect Team ID (if you have multiple teams)
+team_id("BJ6KJYQ3SB") # Developer Portal Team ID
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

@@ -1,0 +1,23 @@
+# Matchfile for Valuemate
+
+# Git repository URL where certificates and profiles are stored
+# You need to create a private repository on GitHub first
+# Example: https://github.com/manzarnazar/valuemate-certificates
+git_url(ENV["MATCH_GIT_URL"] || "YOUR_GIT_URL_HERE")
+
+storage_mode("git")
+
+type("appstore") # The default type, can be: appstore, adhoc, development, enterprise
+
+app_identifier(["com.valuema8"])
+
+username(ENV["FASTLANE_USER"]) # Your Apple Developer Portal username
+
+# For all available options run `fastlane match --help`
+# Remove the # in the beginning of the line to enable the other options
+
+# Git branch to use
+git_branch("main")
+
+# For more information about the Matchfile, see:
+#     https://docs.fastlane.tools/actions/match/
