@@ -45,27 +45,23 @@ jobs:
           flutter doctor -v
 
       - name: Build Flutter iOS (no codesign)
-        run: |
-          flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign
 
       - name: Install CocoaPods dependencies
-        working-directory: ios
         run: |
-          pod repo update
-          pod install --repo-update
+          cd ios
+          pod install
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
+          bundler-cache: true
 
       - name: Install Fastlane via Bundler
-        run: |
-          cd ios
-          bundle install
+        run: cd ios && bundle install
 
       - name: Set up provisioning profiles and certificates
-        working-directory: ios
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_KEYCHAIN_PASSWORD: ${{ secrets.MATCH_KEYCHAIN_PASSWORD }}
@@ -77,10 +73,9 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
-        run: bundle exec fastlane match appstore --readonly --verbose
+        run: cd ios && bundle exec fastlane match appstore --readonly --verbose
 
       - name: Build and Archive iOS app
-        working-directory: ios
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_KEYCHAIN_PASSWORD: ${{ secrets.MATCH_KEYCHAIN_PASSWORD }}
@@ -90,11 +85,10 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
-        run: bundle exec fastlane ios build --verbose
+        run: cd ios && bundle exec fastlane ios build --verbose
 
       - name: Deploy to TestFlight
         if: github.event.inputs.release_type == 'testflight' || github.ref == 'refs/heads/main'
-        working-directory: ios
         env:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           MATCH_KEYCHAIN_PASSWORD: ${{ secrets.MATCH_KEYCHAIN_PASSWORD }}
@@ -104,7 +98,7 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
-        run: bundle exec fastlane ios beta --verbose
+        run: cd ios && bundle exec fastlane ios beta --verbose
 
       - name: Deploy to App Store
         if: github.event.inputs.release_type == 'production' || startsWith(github.ref, 'refs/tags/v')
@@ -117,8 +111,7 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
-        working-directory: ios
-        run: bundle exec fastlane ios release
+        run: cd ios && bundle exec fastlane ios release
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
