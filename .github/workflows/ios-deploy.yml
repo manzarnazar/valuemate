@@ -58,8 +58,6 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
-          bundler-cache: true
-          working-directory: ios
 
       - name: Install Fastlane via Bundler
         working-directory: ios
