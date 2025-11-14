@@ -1,0 +1,9 @@
+# Don't commit the following files
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/README.md
+*.ipa
+*.dSYM.zip
+*.app.dSYM.zip

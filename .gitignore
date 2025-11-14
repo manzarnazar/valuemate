@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Ruby/Bundler
+ios/vendor/
+ios/.bundle/
+ios/Gemfile.lock
