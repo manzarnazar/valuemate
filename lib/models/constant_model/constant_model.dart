@@ -385,6 +385,7 @@ class DocumentRequirement {
   final int propertyTypeId;
   final int serviceTypeId;
   final String documentName;
+  final String? documentNameAr;
   final int isFile;
 
   DocumentRequirement({
@@ -392,6 +393,7 @@ class DocumentRequirement {
     required this.propertyTypeId,
     required this.serviceTypeId,
     required this.documentName,
+    this.documentNameAr,
     required this.isFile,
   });
 
@@ -401,6 +403,7 @@ class DocumentRequirement {
       propertyTypeId: json['property_type_id'] ?? 0,
       serviceTypeId: json['service_type_id'] ?? 0,
       documentName: json['document_name'] ?? '',
+      documentNameAr: json['document_name_ar'],
       isFile: json['is_file'] ,
     );
   }

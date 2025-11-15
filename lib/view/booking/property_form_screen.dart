@@ -91,6 +91,13 @@ class _PropertyFormState extends State<PropertyForm> {
     }).toList();
   }
 
+  String getDocumentDisplayName(DocumentRequirement doc) {
+    final currentLang = Get.locale?.languageCode ?? 'en';
+    return (currentLang == 'ar' && doc.documentNameAr != null && doc.documentNameAr!.isNotEmpty)
+        ? doc.documentNameAr!
+        : doc.documentName;
+  }
+
   Future<void> _loadToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -195,7 +202,7 @@ class _PropertyFormState extends State<PropertyForm> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          "Enter ${requirement.documentName}",
+          "Enter ${getDocumentDisplayName(requirement)}",
           style: boldTextStyle(color: Theme.of(context).iconTheme.color),
         ),
         content: TextField(
@@ -223,7 +230,7 @@ class _PropertyFormState extends State<PropertyForm> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                       content: Text('please_enter_value'
-                          .trParams({"docName": requirement.documentName}))),
+                          .trParams({"docName": getDocumentDisplayName(requirement)}))),
                 );
               }
             },
@@ -332,7 +339,7 @@ class _PropertyFormState extends State<PropertyForm> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                   content: Text('please_upload_doc'
-                      .trParams({"docName": doc.documentName}))),
+                      .trParams({"docName": getDocumentDisplayName(doc)}))),
             );
             return;
           }
@@ -343,7 +350,7 @@ class _PropertyFormState extends State<PropertyForm> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                   content: Text('please_enter_doc'
-                      .trParams({"docName": doc.documentName}))),
+                      .trParams({"docName": getDocumentDisplayName(doc)}))),
             );
             return;
           }
@@ -1074,7 +1081,7 @@ class _PropertyFormState extends State<PropertyForm> {
               .map((doc) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(doc.documentName,
+                      Text(getDocumentDisplayName(doc),
                           style: primaryTextStyle(
                               color: Theme.of(context).iconTheme.color)),
                       SizedBox(height: 8),
@@ -1143,7 +1150,7 @@ class _PropertyFormState extends State<PropertyForm> {
                               shape: RoundedRectangleBorder(
                                   borderRadius: radius(defaultRadius))),
                           icon: Icon(Icons.upload_file, color: Colors.white),
-                          label: Text("Upload ${doc.documentName}",
+                          label: Text("Upload ${getDocumentDisplayName(doc)}",
                               style:
                                   boldTextStyle(size: 16, color: Colors.white)),
                         ),
@@ -1190,8 +1197,8 @@ class _PropertyFormState extends State<PropertyForm> {
                           icon: Icon(Icons.edit, color: Colors.white),
                           label: Text(
                               documentTextValues.containsKey(doc.id)
-                                  ? 'Edit ${doc.documentName}'
-                                  : 'Enter ${doc.documentName}',
+                                  ? 'Edit ${getDocumentDisplayName(doc)}'
+                                  : 'Enter ${getDocumentDisplayName(doc)}',
                               style:
                                   boldTextStyle(size: 16, color: Colors.white)),
                         ),

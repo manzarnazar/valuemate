@@ -102,6 +102,7 @@ class AppTranslations extends Translations {
           'area_label_label': 'Area',
           'amount_label': 'Amount',
           'status_label': 'Status',
+          "type_message_hint": "Type your message here",
           'reference_label': 'Reference',
           'date_label': 'Date',
           'time_label': 'Time',
@@ -159,6 +160,7 @@ class AppTranslations extends Translations {
           'tap_to_select_location': 'انقر لاختيار الموقع',
           'area_label': 'المساحة',
           'unit': 'الوحدة',
+          
           'service_type_label': 'نوع الخدمة',
           'request_valuation': 'طلب تقييم',
           'express_request': 'طلب سريع (أسرع)',
@@ -183,6 +185,7 @@ class AppTranslations extends Translations {
           'request': 'طلب',
           'companies': 'الشركات',
           'bookings': 'الحجوزات',
+          "type_message_hint" : "اكتب رسالتك هنا",
           'all_statuses': 'جميع الحالات',
           'no_bookings_available': 'لا توجد حجوزات.',
           'menu': 'القائمة',
